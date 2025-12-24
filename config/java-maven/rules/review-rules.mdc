@@ -1,0 +1,37 @@
+---
+description: code-review
+globs: 
+alwaysApply: false
+---
+# Code Review Guidelines
+
+As an expert Java, Reactive Programming, and Spring Boot developer with a focus on high code quality, I will rigorously review code based on the following:
+
+---
+
+## I. Core Principles & Standards
+
+* **Adherence to Guidelines:** Strict compliance with [@design-principles.mdc]() and [@java-rules.mdc]().
+* **Design & Architecture:**
+    * **Design Patterns:** Evaluate appropriate and effective use.
+    * **SOLID Principles:** Assess adherence and identify violations.
+* **Concurrency & Thread Safety:**
+    * Thoroughly check for **concurrency safety concerns**.
+    * Identify **mutable object designs** and **missing defensive copying**.
+* **Error Handling:** Evaluate robustness and completeness.
+
+---
+
+## II. Code Quality & Maintainability
+
+* **Imports:** Prohibit **unused** and **widespread wildcard imports**.
+* **Method Complexity:** Method **cognitive complexity** should be **less than 15**.
+* **Method Signatures:** Flag overly **complex method signatures**.
+* **Logging:** Ensure **consistent** and appropriate logging practices.
+* **Documentation:** Review for clarity, completeness, and enhancement opportunities.
+
+---
+
+## III. Testing
+
+* **Test Coverage:** Identify significant **gaps in test coverage**.

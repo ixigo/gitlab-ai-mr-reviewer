@@ -1,0 +1,962 @@
+---
+description: Design principles and patterns for Next.js TypeScript applications
+globs:
+alwaysApply: true
+---
+
+# Design Principles and Patterns for Next.js TypeScript Applications
+
+## Design Principles
+
+These principles guide the application of design patterns in Next.js/TypeScript:
+
+1. **Favor composition over inheritance**
+   - Encapsulate behaviors using composition and React component composition.
+   - Example: Use Higher-Order Components (HOCs) or custom hooks instead of class inheritance.
+   - Prefer functional composition with hooks over class-based inheritance.
+
+2. **Program to an interface, not an implementation**
+   - Use TypeScript interfaces and types for flexibility.
+   - Example: Define component props as interfaces, use generic types for reusable logic.
+
+3. **Encapsulate what varies**
+   - Isolate changing code in separate modules, hooks, or components.
+   - Example: Extract API calls into custom hooks, separate business logic from UI.
+
+4. **SOLID Principles**
+   - **Single Responsibility**: One component/hook, one purpose.
+   - **Open/Closed**: Open for extension via composition, closed for modification.
+   - **Liskov Substitution**: Components should be interchangeable with their types.
+   - **Interface Segregation**: Props interfaces should be specific, not bloated.
+   - **Dependency Inversion**: Depend on abstractions (types/interfaces), not concrete implementations.
+
+5. **Strive for loosely coupled designs**
+   - Minimize dependencies between components and modules.
+   - Example: Use Context API, custom hooks, or state management to decouple components.
+
+## Design Patterns
+
+The following patterns adapted for Next.js/TypeScript applications with React best practices.
+
+### 1. Strategy Pattern
+
+- **Description**: Encapsulates interchangeable behaviors, allowing runtime changes.
+- **Guidance**: Use function types or interfaces for behaviors with multiple implementations.
+- **Example**: Payment methods with different processing strategies.
+- **Code Snippet**:
+
+```typescript
+// Define strategy interface
+interface PaymentStrategy {
+  processPayment(amount: number): Promise<boolean>;
+}
+
+// Concrete strategies
+class CreditCardStrategy implements PaymentStrategy {
+  async processPayment(amount: number): Promise<boolean> {
+    // Process credit card payment
+    return true;
+  }
+}
+
+class UpiStrategy implements PaymentStrategy {
+  async processPayment(amount: number): Promise<boolean> {
+    // Process UPI payment
+    return true;
+  }
+}
+
+// Context component
+const PaymentProcessor = ({ strategy }: { strategy: PaymentStrategy }) => {
+  const handlePayment = async (amount: number) => {
+    await strategy.processPayment(amount);
+  };
+
+  return <button onClick={() => handlePayment(100)}>Pay</button>;
+};
+```
+
+### 2. Observer Pattern
+
+- **Description**: Manages one-to-many dependencies with automatic updates when state changes.
+- **Guidance**: Use React Context API, custom hooks, or event emitters for pub-sub patterns.
+- **Example**: State management with Context API or custom event system.
+- **Code Snippet**:
+
+```typescript
+// Using Context API (React's built-in Observer pattern)
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  pressure: number;
+}
+
+const WeatherContext = createContext<WeatherData | null>(null);
+
+export const WeatherProvider = ({ children }: { children: React.ReactNode }) => {
+  const [weather, setWeather] = useState<WeatherData>({
+    temperature: 0,
+    humidity: 0,
+    pressure: 0,
+  });
+
+  const updateWeather = (newWeather: WeatherData) => {
+    setWeather(newWeather);
+  };
+
+  return (
+    <WeatherContext.Provider value={weather}>
+      {children}
+    </WeatherContext.Provider>
+  );
+};
+
+// Observer component
+export const CurrentConditions = () => {
+  const weather = useContext(WeatherContext);
+  return <div>Temperature: {weather?.temperature}</div>;
+};
+```
+
+### 3. Decorator Pattern
+
+- **Description**: Extends behavior dynamically by wrapping components or functions.
+- **Guidance**: Use Higher-Order Components (HOCs) or component composition.
+- **Example**: HOC for adding authentication, logging, or styling to components.
+- **Code Snippet**:
+
+```typescript
+// Higher-Order Component (HOC) example
+interface WithLoadingProps {
+  isLoading: boolean;
+}
+
+function withLoading<P extends object>(
+  Component: React.ComponentType<P>
+) {
+  return (props: P & WithLoadingProps) => {
+    const { isLoading, ...restProps } = props;
+
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+
+    return <Component {...(restProps as P)} />;
+  };
+}
+
+// Function decorator example for cost calculation
+interface Beverage {
+  getDescription(): string;
+  getCost(): number;
+}
+
+const createBeverage = (description: string, cost: number): Beverage => ({
+  getDescription: () => description,
+  getCost: () => cost,
+});
+
+const withMocha = (beverage: Beverage): Beverage => ({
+  getDescription: () => `${beverage.getDescription()}, Mocha`,
+  getCost: () => beverage.getCost() + 0.20,
+});
+```
+
+### 4. Factory Patterns
+
+- **Description**: Delegates object creation logic to factory functions or classes.
+- **Guidance**: Use factory functions for component/object creation, abstract factories for families.
+- **Example**: Component factory for different notification types.
+- **Code Snippet**:
+
+```typescript
+// Factory Method Pattern
+interface Notification {
+  type: string;
+  message: string;
+  render(): React.ReactNode;
+}
+
+class SuccessNotification implements Notification {
+  type = 'success';
+  constructor(public message: string) {}
+
+  render() {
+    return <div className="success">{this.message}</div>;
+  }
+}
+
+class ErrorNotification implements Notification {
+  type = 'error';
+  constructor(public message: string) {}
+
+  render() {
+    return <div className="error">{this.message}</div>;
+  }
+}
+
+// Factory function
+const createNotification = (type: string, message: string): Notification => {
+  switch (type) {
+    case 'success':
+      return new SuccessNotification(message);
+    case 'error':
+      return new ErrorNotification(message);
+    default:
+      throw new Error('Unknown notification type');
+  }
+};
+
+// Usage in component
+const NotificationComponent = ({ type, message }: { type: string; message: string }) => {
+  const notification = createNotification(type, message);
+  return notification.render();
+};
+```
+
+### 5. Singleton Pattern
+
+- **Description**: Ensures one instance with global access.
+- **Guidance**: Use ES6 modules (naturally singleton) or lazy initialization for services.
+- **Example**: API client or configuration service.
+- **Code Snippet**:
+
+```typescript
+// Using ES6 module (naturally singleton)
+class ApiClient {
+  private static instance: ApiClient;
+  private baseUrl: string;
+
+  private constructor() {
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  }
+
+  public static getInstance(): ApiClient {
+    if (!ApiClient.instance) {
+      ApiClient.instance = new ApiClient();
+    }
+    return ApiClient.instance;
+  }
+
+  async fetch(endpoint: string) {
+    return fetch(`${this.baseUrl}${endpoint}`);
+  }
+}
+
+export default ApiClient.getInstance();
+
+// Or simpler: use ES6 module singleton
+class ConfigService {
+  public readonly apiUrl: string;
+
+  constructor() {
+    this.apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  }
+}
+
+export const configService = new ConfigService();
+```
+
+### 6. Command Pattern
+
+- **Description**: Encapsulates requests as objects, supporting undo/redo and queuing.
+- **Guidance**: Use for action dispatching, undo/redo functionality, or command queues.
+- **Example**: Text editor with undo/redo functionality or Redux actions.
+- **Code Snippet**:
+
+```typescript
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+class AddTextCommand implements Command {
+  private previousText: string;
+
+  constructor(
+    private editor: {text: string},
+    private textToAdd: string
+  ) {
+    this.previousText = editor.text;
+  }
+
+  execute(): void {
+    this.editor.text += this.textToAdd;
+  }
+
+  undo(): void {
+    this.editor.text = this.previousText;
+  }
+}
+
+class CommandManager {
+  private history: Command[] = [];
+  private currentIndex = -1;
+
+  executeCommand(command: Command): void {
+    command.execute();
+    this.history = this.history.slice(0, this.currentIndex + 1);
+    this.history.push(command);
+    this.currentIndex++;
+  }
+
+  undo(): void {
+    if (this.currentIndex >= 0) {
+      this.history[this.currentIndex].undo();
+      this.currentIndex--;
+    }
+  }
+}
+```
+
+### 7. Adapter Pattern
+
+- **Description**: Converts one interface to another for compatibility.
+- **Guidance**: Use adapters to wrap third-party libraries or legacy code.
+- **Example**: Adapting external API response to internal data structure.
+- **Code Snippet**:
+
+```typescript
+// External API interface (what we get)
+interface ExternalApiResponse {
+  user_name: string;
+  user_email: string;
+  created_at: string;
+}
+
+// Internal interface (what we want)
+interface User {
+  name: string;
+  email: string;
+  createdDate: Date;
+}
+
+// Adapter
+class UserAdapter {
+  static adapt(response: ExternalApiResponse): User {
+    return {
+      name: response.user_name,
+      email: response.user_email,
+      createdDate: new Date(response.created_at),
+    };
+  }
+}
+
+// Usage
+const adaptedUser = UserAdapter.adapt(externalResponse);
+```
+
+### 8. Facade Pattern
+
+- **Description**: Simplifies complex subsystems with a unified interface.
+- **Guidance**: Create facade classes/hooks to hide complexity of multiple services.
+- **Example**: Custom hook that orchestrates multiple API calls.
+- **Code Snippet**:
+
+```typescript
+// Complex subsystems
+class AuthService {
+  async login(credentials: {email: string; password: string}) {
+    // Login logic
+  }
+}
+
+class UserService {
+  async fetchProfile(userId: string) {
+    // Fetch profile
+  }
+}
+
+class AnalyticsService {
+  trackLogin(userId: string) {
+    // Track login
+  }
+}
+
+// Facade
+class AuthFacade {
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
+    private analyticsService: AnalyticsService
+  ) {}
+
+  async loginUser(credentials: {email: string; password: string}) {
+    const authResult = await this.authService.login(credentials);
+    const profile = await this.userService.fetchProfile(authResult.userId);
+    this.analyticsService.trackLogin(authResult.userId);
+    return {auth: authResult, profile};
+  }
+}
+
+// React Hook Facade
+function useAuth() {
+  const login = async (credentials: {email: string; password: string}) => {
+    const facade = new AuthFacade(
+      new AuthService(),
+      new UserService(),
+      new AnalyticsService()
+    );
+    return facade.loginUser(credentials);
+  };
+
+  return {login};
+}
+```
+
+### 9. Template Method Pattern
+
+- **Description**: Defines an algorithm skeleton with customizable steps.
+- **Guidance**: Use abstract classes or base classes with protected methods, or functional approach.
+- **Example**: Data fetching pattern with customizable transform step.
+- **Code Snippet**:
+
+```typescript
+// Class-based approach
+abstract class DataFetcher<T, R> {
+  // Template method
+  async fetch(url: string): Promise<R> {
+    const data = await this.fetchData(url);
+    this.validate(data);
+    return this.transform(data);
+  }
+
+  private async fetchData(url: string): Promise<T> {
+    const response = await fetch(url);
+    return response.json();
+  }
+
+  protected validate(data: T): void {
+    // Default validation
+    if (!data) throw new Error('Invalid data');
+  }
+
+  // Abstract method - must be implemented
+  protected abstract transform(data: T): R;
+}
+
+class UserDataFetcher extends DataFetcher<any, User> {
+  protected transform(data: any): User {
+    return {
+      name: data.name,
+      email: data.email,
+    };
+  }
+}
+
+// Functional approach (more idiomatic for React/TS)
+type FetchOptions<T, R> = {
+  transform: (data: T) => R;
+  validate?: (data: T) => void;
+};
+
+async function fetchData<T, R>(
+  url: string,
+  options: FetchOptions<T, R>
+): Promise<R> {
+  const response = await fetch(url);
+  const data: T = await response.json();
+
+  if (options.validate) {
+    options.validate(data);
+  }
+
+  return options.transform(data);
+}
+```
+
+### 10. Iterator Pattern
+
+- **Description**: Provides sequential access to collections without exposing structure.
+- **Guidance**: Use JavaScript iterators/generators or array methods.
+- **Example**: Custom iterator for paginated data or tree traversal.
+- **Code Snippet**:
+
+```typescript
+// Using JavaScript iterators (Symbol.iterator)
+class PaginatedCollection<T> {
+  constructor(
+    private items: T[],
+    private pageSize: number
+  ) {}
+
+  *[Symbol.iterator]() {
+    for (let i = 0; i < this.items.length; i += this.pageSize) {
+      yield this.items.slice(i, i + this.pageSize);
+    }
+  }
+}
+
+// Usage
+const collection = new PaginatedCollection([1, 2, 3, 4, 5, 6], 2);
+for (const page of collection) {
+  console.log(page); // [1, 2], [3, 4], [5, 6]
+}
+
+// Generator function for async iteration
+async function* fetchPages(url: string, totalPages: number) {
+  for (let page = 1; page <= totalPages; page++) {
+    const response = await fetch(`${url}?page=${page}`);
+    const data = await response.json();
+    yield data;
+  }
+}
+
+// Usage in component
+async function loadAllPages() {
+  for await (const page of fetchPages('/api/items', 5)) {
+    console.log(page);
+  }
+}
+```
+
+### 11. Composite Pattern
+
+- **Description**: Treats individual objects and compositions uniformly (tree structures).
+- **Guidance**: Perfect for React component trees, file systems, or nested data structures.
+- **Example**: Nested menu or file system components.
+- **Code Snippet**:
+
+```typescript
+// Component interface
+interface FileSystemNode {
+  name: string;
+  getSize(): number;
+  render(): React.ReactNode;
+}
+
+// Leaf
+class File implements FileSystemNode {
+  constructor(public name: string, private size: number) {}
+
+  getSize(): number {
+    return this.size;
+  }
+
+  render() {
+    return <div className="file">📄 {this.name} ({this.size} KB)</div>;
+  }
+}
+
+// Composite
+class Folder implements FileSystemNode {
+  private children: FileSystemNode[] = [];
+
+  constructor(public name: string) {}
+
+  add(node: FileSystemNode): void {
+    this.children.push(node);
+  }
+
+  getSize(): number {
+    return this.children.reduce((sum, child) => sum + child.getSize(), 0);
+  }
+
+  render() {
+    return (
+      <div className="folder">
+        <div>📁 {this.name}</div>
+        <div className="children">
+          {this.children.map((child, i) => (
+            <div key={i}>{child.render()}</div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+}
+
+// React Component Pattern (more idiomatic)
+type TreeNode = {
+  name: string;
+  children?: TreeNode[];
+};
+
+const TreeComponent = ({ node }: { node: TreeNode }) => (
+  <div>
+    <div>{node.name}</div>
+    {node.children && (
+      <div className="nested">
+        {node.children.map((child, i) => (
+          <TreeComponent key={i} node={child} />
+        ))}
+      </div>
+    )}
+  </div>
+);
+```
+
+### 12. State Pattern
+
+- **Description**: Changes object behavior based on state.
+- **Guidance**: Use state machines or reducer patterns (Redux/useReducer).
+- **Example**: Order processing with different states.
+- **Code Snippet**:
+
+```typescript
+// State interface
+interface OrderState {
+  process(): void;
+  cancel(): void;
+  ship(): void;
+}
+
+class Order {
+  constructor(private state: OrderState) {}
+
+  setState(state: OrderState): void {
+    this.state = state;
+  }
+
+  process(): void {
+    this.state.process();
+  }
+
+  cancel(): void {
+    this.state.cancel();
+  }
+
+  ship(): void {
+    this.state.ship();
+  }
+}
+
+// Concrete states
+class PendingState implements OrderState {
+  constructor(private order: Order) {}
+
+  process(): void {
+    console.log('Processing order...');
+    this.order.setState(new ProcessingState(this.order));
+  }
+
+  cancel(): void {
+    console.log('Order cancelled');
+  }
+
+  ship(): void {
+    console.log('Cannot ship pending order');
+  }
+}
+
+// React Hook Pattern (more idiomatic)
+type OrderStatus = 'pending' | 'processing' | 'shipped' | 'cancelled';
+
+type OrderAction = {type: 'PROCESS'} | {type: 'SHIP'} | {type: 'CANCEL'};
+
+function orderReducer(state: OrderStatus, action: OrderAction): OrderStatus {
+  switch (state) {
+    case 'pending':
+      if (action.type === 'PROCESS') return 'processing';
+      if (action.type === 'CANCEL') return 'cancelled';
+      return state;
+    case 'processing':
+      if (action.type === 'SHIP') return 'shipped';
+      return state;
+    default:
+      return state;
+  }
+}
+
+function useOrderState() {
+  const [status, dispatch] = useReducer(orderReducer, 'pending');
+  return {status, dispatch};
+}
+```
+
+### 13. Proxy Pattern
+
+- **Description**: Controls access to objects (caching, lazy loading, access control).
+- **Guidance**: Use JavaScript Proxy API or wrapper classes for access control.
+- **Example**: Caching proxy for API calls or lazy loading.
+- **Code Snippet**:
+
+```typescript
+// Virtual Proxy for lazy loading
+class ImageProxy {
+  private realImage: HTMLImageElement | null = null;
+
+  constructor(private url: string) {}
+
+  display(): HTMLImageElement {
+    if (!this.realImage) {
+      console.log('Loading image...');
+      this.realImage = new Image();
+      this.realImage.src = this.url;
+    }
+    return this.realImage;
+  }
+}
+
+// Caching Proxy for API calls
+class ApiProxy {
+  private cache = new Map<string, any>();
+
+  async fetch(url: string): Promise<any> {
+    if (this.cache.has(url)) {
+      console.log('Returning cached data');
+      return this.cache.get(url);
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+    this.cache.set(url, data);
+    return data;
+  }
+}
+
+// Using JavaScript Proxy API for property access control
+const createValidatedUser = (user: any) => {
+  return new Proxy(user, {
+    set(target, property, value) {
+      if (property === 'age' && (value < 0 || value > 150)) {
+        throw new Error('Invalid age');
+      }
+      target[property] = value;
+      return true;
+    },
+  });
+};
+```
+
+### 14. Compound Patterns (React Architecture)
+
+- **Description**: Combines multiple patterns for robust architecture.
+- **Guidance**: Use combinations like Container/Presentational + Hooks + Context.
+- **Example**: Feature module combining multiple patterns.
+- **Code Snippet**:
+
+```typescript
+// Model (Data + Business Logic) - uses Singleton
+class UserStore {
+  private static instance: UserStore;
+  private users: User[] = [];
+  private observers: ((users: User[]) => void)[] = [];
+
+  static getInstance() {
+    if (!UserStore.instance) {
+      UserStore.instance = new UserStore();
+    }
+    return UserStore.instance;
+  }
+
+  // Observer Pattern
+  subscribe(observer: (users: User[]) => void) {
+    this.observers.push(observer);
+  }
+
+  private notify() {
+    this.observers.forEach(obs => obs(this.users));
+  }
+
+  addUser(user: User) {
+    this.users.push(user);
+    this.notify();
+  }
+}
+
+// Context (Observer Pattern)
+const UserContext = createContext<User[] | null>(null);
+
+// Container Component (Facade Pattern)
+export const UserFeature = () => {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const store = UserStore.getInstance();
+    store.subscribe(setUsers);
+  }, []);
+
+  return (
+    <UserContext.Provider value={users}>
+      <UserList />
+      <AddUserForm />
+    </UserContext.Provider>
+  );
+};
+
+// Presentational Component
+const UserList = () => {
+  const users = useContext(UserContext);
+  return (
+    <div>
+      {users?.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+};
+```
+
+## Code Style for TypeScript/Next.js
+
+- **Use TypeScript strict mode** with explicit types for function parameters and return types.
+- **Prefer interfaces over type aliases** for object shapes (can be extended).
+- **Use type aliases** for unions, intersections, and primitive combinations.
+- **Include JSDoc/TSDoc comments** for public functions, components, and complex logic.
+- **Example TSDoc**:
+
+```typescript
+/**
+ * Fetches user data and handles authentication state.
+ * Implements the Observer pattern for state updates.
+ *
+ * @param userId - The unique identifier for the user
+ * @returns Promise resolving to user data
+ * @throws {AuthError} When user is not authenticated
+ */
+async function fetchUserData(userId: string): Promise<User> {
+  // Implementation
+}
+```
+
+- **Component naming**: Use PascalCase for components, camelCase for functions/variables.
+- **Keep components small**: Ideally under 200 lines, extract sub-components.
+- **Extract custom hooks** for reusable logic (prefix with `use`).
+- **Use descriptive names**: `userList` instead of `list`, `handleSubmit` instead of `submit`.
+- **Prefer named exports** for components and utilities (better for tree-shaking).
+- **Use barrel exports** (index.ts) for clean imports from feature folders.
+- **Avoid default exports** except for Next.js page components (required by framework).
+- **Avoid wildcard imports**, use specific named imports.
+
+## Autocompletion and Suggestions
+
+- **Suggest React patterns**: Container/Presentational, Compound Components, Render Props, Custom Hooks.
+- **Recommend hooks over HOCs**: Custom hooks are more composable and easier to understand.
+- **Suggest Context API** for prop drilling issues (Observer pattern).
+- **Highlight anti-patterns**: Prop drilling, premature optimization, excessive component nesting.
+- **Recommend factory functions** for creating components or objects dynamically.
+- **Suggest type narrowing** with discriminated unions instead of type assertions.
+- **For Next.js**: Suggest Server Components, API Routes, and proper data fetching patterns.
+
+## Error Handling
+
+- **Use Error Boundaries** for React component error handling.
+- **Create custom error classes** for different error types.
+- **Use Result types** or functional error handling (Either/Result pattern) for predictable errors.
+- **Avoid empty catch blocks**; always log or handle errors meaningfully.
+- **Use optional chaining** (?.) and nullish coalescing (??) to handle null/undefined safely.
+- **Example Error Handling**:
+
+```typescript
+// Custom error class
+class ApiError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+// Result type pattern
+type Result<T, E = Error> =
+  | {success: true; data: T}
+  | {success: false; error: E};
+
+async function fetchUser(id: string): Promise<Result<User>> {
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    if (!response.ok) {
+      return {
+        success: false,
+        error: new ApiError(response.status, 'Failed to fetch user'),
+      };
+    }
+    const data = await response.json();
+    return {success: true, data};
+  } catch (error) {
+    return {success: false, error: error as Error};
+  }
+}
+```
+
+## Testing
+
+- **Use Jest** for unit/integration tests with React Testing Library for component tests.
+- **Test behavior, not implementation**: Focus on user interactions and outcomes.
+- **Write tests for patterns**: Strategy variations, State transitions, HOC behavior.
+- **Use MSW (Mock Service Worker)** for API mocking.
+- **Test custom hooks** with `@testing-library/react-hooks`.
+- **Example Test**:
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { UserList } from './UserList';
+
+describe('UserList Component', () => {
+  it('should display users when loaded', () => {
+    const users = [
+      { id: '1', name: 'John' },
+      { id: '2', name: 'Jane' },
+    ];
+
+    render(<UserList users={users} />);
+
+    expect(screen.getByText('John')).toBeInTheDocument();
+    expect(screen.getByText('Jane')).toBeInTheDocument();
+  });
+
+  it('should handle user click', () => {
+    const handleClick = jest.fn();
+    const users = [{ id: '1', name: 'John' }];
+
+    render(<UserList users={users} onUserClick={handleClick} />);
+
+    fireEvent.click(screen.getByText('John'));
+    expect(handleClick).toHaveBeenCalledWith('1');
+  });
+});
+
+// Testing custom hooks
+import { renderHook, act } from '@testing-library/react-hooks';
+import { useOrderState } from './useOrderState';
+
+describe('useOrderState hook', () => {
+  it('should transition from pending to processing', () => {
+    const { result } = renderHook(() => useOrderState());
+
+    expect(result.current.status).toBe('pending');
+
+    act(() => {
+      result.current.dispatch({ type: 'PROCESS' });
+    });
+
+    expect(result.current.status).toBe('processing');
+  });
+});
+```
+
+## Additional Notes
+
+- **Include pattern comments** in code to document design decisions.
+- **Example**:
+
+```typescript
+// Strategy Pattern: Payment processing with interchangeable strategies
+interface PaymentStrategy {
+  processPayment(amount: number): Promise<boolean>;
+}
+
+// Observer Pattern: Using Context API for state management
+const ThemeContext = createContext<Theme | null>(null);
+```
+
+- **Document trade-offs**: When suggesting patterns, explain pros/cons.
+  - HOCs: Powerful but can create wrapper hell
+  - Render Props: Flexible but verbose
+  - Custom Hooks: Clean and composable but React-specific
+  - Context: Great for global state but can cause re-renders
+
+- **Next.js specific considerations**:
+  - Use Server Components by default (Next.js 13+)
+  - Client Components only when needed (interactivity, browser APIs, hooks)
+  - API Routes for backend logic
+  - Consider edge runtime for performance
+
+- **Performance patterns**:
+  - Memoization with `useMemo` and `useCallback`
+  - Code splitting with dynamic imports
+  - React.lazy for component lazy loading
+  - Virtual scrolling for large lists

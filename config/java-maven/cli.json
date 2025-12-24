@@ -1,0 +1,178 @@
+{
+  "version": "1.0",
+  "description": "Cursor CLI configuration for AI-powered Java/Maven code review with cursor-agent",
+  "agent": "cursor-agent",
+  "rules": ["./rules/review-rules.mdc"],
+  "mode": "review",
+  "settings": {
+    "review": {
+      "type": "code_review",
+      "auto_push": false,
+      "create_pull_request": false,
+      "commit_changes": false,
+      "focus_areas": [
+        "design_patterns",
+        "solid_principles",
+        "type_safety",
+        "error_handling",
+        "code_quality",
+        "testing",
+        "security",
+        "performance",
+        "concurrency",
+        "memory_management"
+      ],
+      "severity_levels": ["critical", "moderate", "minor"],
+      "output_format": "markdown",
+      "include_suggestions": true,
+      "include_grading": true,
+      "include_code_examples": true,
+      "include_metrics_table": true
+    },
+    "analysis": {
+      "max_method_complexity": 15,
+      "max_method_lines": 50,
+      "max_class_lines": 500,
+      "check_unused_imports": true,
+      "check_wildcard_imports": true,
+      "check_thread_safety": true,
+      "check_defensive_copying": true,
+      "validate_design_patterns": true,
+      "validate_solid_principles": true,
+      "check_null_safety": true,
+      "check_resource_leaks": true,
+      "check_exception_handling": true,
+      "validate_logging": true
+    },
+    "java": {
+      "version": "17",
+      "enforce_final_variables": true,
+      "check_immutability": true,
+      "validate_equals_hashcode": true,
+      "check_serialization": true,
+      "validate_generic_types": true,
+      "check_stream_usage": true,
+      "validate_optional_usage": true,
+      "check_lambda_complexity": true,
+      "enforce_interface_over_implementation": true
+    },
+    "maven": {
+      "validate_dependencies": true,
+      "check_dependency_versions": true,
+      "check_security_vulnerabilities": true,
+      "validate_plugin_versions": true,
+      "check_circular_dependencies": false
+    },
+    "spring": {
+      "validate_bean_definitions": true,
+      "check_transaction_boundaries": true,
+      "validate_rest_endpoints": true,
+      "check_security_annotations": true,
+      "validate_dependency_injection": true,
+      "check_configuration_properties": true
+    },
+    "concurrency": {
+      "check_thread_safety": true,
+      "validate_synchronization": true,
+      "check_race_conditions": true,
+      "validate_concurrent_collections": true,
+      "check_atomic_operations": true
+    },
+    "security": {
+      "check_sql_injection": true,
+      "validate_input_sanitization": true,
+      "check_authentication": true,
+      "check_authorization": true,
+      "validate_crypto_usage": true,
+      "check_sensitive_data_exposure": true,
+      "validate_deserialization": true
+    },
+    "performance": {
+      "check_unnecessary_boxing": true,
+      "validate_collection_usage": true,
+      "check_string_concatenation": true,
+      "validate_caching": true,
+      "check_unnecessary_object_creation": true,
+      "validate_database_queries": true
+    },
+    "testing": {
+      "validate_junit_usage": true,
+      "check_test_coverage": true,
+      "validate_mockito_usage": true,
+      "check_test_naming": true,
+      "validate_assertions": true,
+      "check_test_isolation": true
+    },
+    "output": {
+      "verbose": true,
+      "show_file_paths": true,
+      "group_by_severity": true,
+      "include_line_numbers": true,
+      "include_context": true,
+      "show_fixes": true
+    },
+    "ai": {
+      "model": "claude-sonnet-4.5",
+      "temperature": 0.2,
+      "max_tokens": 8000,
+      "stream": false,
+      "context_window": 100000
+    }
+  },
+  "exclusions": {
+    "file_patterns": [
+      "*.class",
+      "*.jar",
+      "*.war",
+      "*.ear",
+      "*.nar",
+      "*.zip",
+      "*.tar.gz",
+      "*.rar",
+      "target/**",
+      "build/**",
+      ".mvn/**",
+      "*.iml",
+      "*.iws",
+      "*.ipr",
+      ".idea/**",
+      ".settings/**",
+      ".classpath",
+      ".project",
+      "*.log",
+      "*.tmp",
+      "**/generated/**",
+      "**/gen/**"
+    ],
+    "directories": [
+      "target",
+      "build",
+      ".mvn",
+      ".idea",
+      ".settings",
+      ".git",
+      "node_modules",
+      "coverage",
+      "out",
+      "bin"
+    ]
+  },
+  "integrations": {
+    "gitlab": {
+      "enabled": true,
+      "post_comments": true,
+      "create_issues": false,
+      "auto_approve": false,
+      "block_on_critical": true
+    },
+    "sonarqube": {
+      "enabled": false
+    },
+    "maven": {
+      "enabled": true,
+      "validate_pom": true,
+      "check_dependencies": true
+    }
+  }
+}
+

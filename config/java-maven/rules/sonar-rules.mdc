@@ -1,0 +1,705 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+## Sonar Rules
+
+### Vulnerability
+- A new session should be created during user authentication
+- Accessing files should not lead to filesystem oracle attacks
+- ActiveMQConnectionFactory should not be vulnerable to malicious code deserialization
+- Applications should not create session cookies from untrusted input
+- Authorizations should be based on strong decisions
+- Basic authentication should not be used
+- Cipher algorithms should be robust
+- Cipher Block Chaining IVs should be unpredictable
+- Classes should not be loaded dynamically
+- Components should not be vulnerable to intent redirection
+- Counter Mode initialization vectors should not be reused
+- Credentials should not be hard-coded
+- Cryptographic keys should be robust
+- Database queries should not be vulnerable to injection attacks
+- Deserialization should not be vulnerable to injection attacks
+- Dynamic code execution should not be vulnerable to injection attacks
+- Encryption algorithms should be used with secure mode and padding scheme
+- Endpoints should not be vulnerable to reflected cross-site scripting (XSS) attacks
+- Environment variables should not be defined from untrusted input
+- Exceptions should not be thrown from servlet methods
+- Extracting archives should not lead to zip slip vulnerabilities
+- HTTP request redirections should not be open to forging attacks
+- HttpSecurity URL patterns should be correctly ordered
+- HttpServletRequest.getRequestedSessionId() should not be used
+- I/O function calls should not be vulnerable to path injection attacks
+- Insecure temporary file creation methods should not be used
+- JSON operations should not be vulnerable to injection attacks
+- JWT should be signed and verified with strong cipher algorithms
+- LDAP connections should be authenticated
+- LDAP queries should not be vulnerable to injection attacks
+- Logging should not be vulnerable to injection attacks
+- Mobile database encryption keys should not be disclosed
+- NoSQL operations should not be vulnerable to injection attacks
+- OS commands should not be vulnerable to argument injection attacks
+- OS commands should not be vulnerable to command injection attacks
+- OpenSAML2 should be configured to prevent authentication bypass
+- Password hashing functions should use an unpredictable salt
+- Passwords should not be stored in plaintext or with a fast hashing algorithm
+- Persistent entities should not be used as arguments of "@RequestMapping" methods
+- Reflection should not be vulnerable to injection attacks
+- Regular expressions should not be vulnerable to Denial of Service attacks
+- Secure random number generators should not output predictable values
+- Server certificates should be verified during SSL/TLS connections
+- Server hostnames should be verified during SSL/TLS connections
+- Server-side requests should not be vulnerable to forging attacks
+- Server-side requests should not be vulnerable to traversing attacks
+- Server-side templates should not be vulnerable to injection attacks
+- A secure password should be used when connecting to a database
+- Thread suspensions should not be vulnerable to Denial of Service attacks
+- Weak SSL/TLS protocols should not be used
+- XML operations should not be vulnerable to injection attacks
+- XML parsers should not allow inclusion of arbitrary files
+- XML parsers should not be vulnerable to Denial of Service attacks
+- XML parsers should not be vulnerable to XXE attacks
+- XML parsers should not load external schemas
+- XML signatures should be validated securely
+- XPath expressions should not be vulnerable to injection attacks
+
+### Security Hotspot
+- Accessing Android external storage is security-sensitive
+- Allowing both safe and unsafe HTTP methods is security-sensitive
+- Allowing deserialization of LDAP objects is security-sensitive
+- Allowing user enumeration is security-sensitive
+- Allowing requests with excessive content length is security-sensitive
+- Authorizing non-authenticated users to use keys in the Android KeyStore is security-sensitive
+- Broadcasting intents is security-sensitive
+- Configuring loggers is security-sensitive
+- Constructing arguments of system commands from user input is security-sensitive
+- Creating cookies without the "HttpOnly" flag is security-sensitive
+- Creating cookies without the "secure" flag is security-sensitive
+- Delivering code in production with debug features activated is security-sensitive
+- Disabling CSRF protections is security-sensitive
+- Disabling auto-escaping in template engines is security-sensitive
+- Disclosing fingerprints from web application technologies is security-sensitive
+- Enabling JavaScript support for WebViews is security-sensitive
+- Enabling file access for WebViews is security-sensitive
+- Expanding archive files without controlling resource consumption is security-sensitive
+- Exposing native code through JavaScript interfaces is security-sensitive
+- Formatting SQL queries is security-sensitive
+- Hard-coded passwords are security-sensitive
+- Hard-coded secrets are security-sensitive
+- Having a permissive Cross-Origin Resource Sharing policy is security-sensitive
+- Processing persistent unique identifiers is security-sensitive
+- Receiving intents is security-sensitive
+- Searching OS commands in PATH is security-sensitive
+- Setting JavaBean properties is security-sensitive
+- Setting loose POSIX file permissions is security-sensitive
+- Using biometric authentication without a cryptographic solution is security-sensitive
+- Using clear-text protocols is security-sensitive
+- Using hardcoded IP addresses is security-sensitive
+- Using long-term access keys is security-sensitive
+- Using non-standard cryptographic algorithms is security-sensitive
+- Using pseudorandom number generators (PRNGs) is security-sensitive
+- Using publicly writable directories is security-sensitive
+- Using slow regular expressions is security-sensitive
+- Using unencrypted databases in mobile applications is security-sensitive
+- Using unencrypted files in mobile applications is security-sensitive
+- Using unsafe Jackson deserialization configuration is security-sensitive
+- Using weak hashing algorithms is security-sensitive
+
+### Bug
+- @Autowired should only be used on a single constructor
+- @EventListener methods should have one parameter at most
+- @Qualifier should not be used on @Bean methods
+- @Scheduled annotation should only be applied to no-arg methods
+- Accessing an array element should not trigger an ArrayIndexOutOfBoundsException
+- All branches in a conditional structure should not have exactly the same implementation
+- Alternatives in regular expressions should be grouped when used with anchors
+- Annotated Mockito objects should be initialized
+- AssertJ assertions "allMatch" and "doesNotContains" should also test for emptiness
+- AssertJ assertions with "Consumer" arguments should contain assertion inside consumers
+- AssertJ configuration should be applied
+- AssertJ methods setting the assertion context should come before an assertion
+- Assertions comparing incompatible types should not be made
+- Assertions should not be used in production code
+- Assertions should not compare an object to itself
+- Assignment of lazy-initialized members should be the last step with double-checked locking
+- Async methods should return void or Future
+- Back references in regular expressions should only refer to capturing groups that are matched before the reference
+- Beans in "@Configuration" class should have different names
+- BigDecimal(double) should not be used
+- Blocks should be synchronized on "private final" fields
+- Calls to methods should not trigger an exception
+- Case insensitive Unicode regular expressions should enable the "UNICODE_CASE" flag
+- Cast operations should not trigger a ClassCastException
+- Child class methods named for parent class methods should be overrides
+- Classes should not access their own subclasses during class initialization
+- Classes should not be compared by name
+- Classes extending java.lang.Thread should provide a specific "run" behavior
+- Classes that don't define "hashCode()" should not be used in hashes
+- Collection sizes and array length comparisons should make sense
+- Collections should not be modified while they are iterated
+- Collections should not be passed as arguments to their own methods
+- CompareTo should not return "Integer.MIN_VALUE"
+- CompareTo should not be overloaded
+- CompareTo results should not be checked for specific values
+- Conditionally executed code should be reachable
+- Consumed Stream pipelines should not be reused
+- Constructor injection should be used instead of field injection
+- Custom serialization methods should have required signatures
+- Custom resources should be closed
+- DateTimeFormatters should not use mismatched year and week numbers
+- Dissimilar primitive wrappers should not be used with the ternary operator without explicit casting
+- Double Brace Initialization should not be used
+- Double.longBitsToDouble should take "long" as argument
+- Double-checked locking should not be used
+- Equals method should be overridden in records containing array fields
+- Equals(Object obj) should test the argument's type
+- Equals method overrides should accept "Object" parameters
+- Equals methods should be symmetric and work for subclasses
+- Exceptions should not be created without being thrown
+- Expressions used in "assert" should not produce side effects
+- Externalizable classes should have no-arguments constructors
+- Files opened in append mode should not be used with "ObjectOutputStream"
+- Floating point numbers should not be tested for equality
+- A for loop update clause should move the counter in the right direction
+- Getters and setters should access the expected fields
+- Getters and setters should be synchronized in pairs
+- HashCode and toString should not be called on array instances
+- JEE applications should not "getClassLoader"
+- JUnit5 inner test classes should be annotated with @Nested
+- JUnit5 test classes and methods should not be silently ignored
+- Identical expressions should not be used on both sides of a binary operator
+- Inappropriate Collection calls should not be made
+- Inappropriate regular expressions should not be used
+- InputSteam.read() implementation should not return a signed byte
+- Ints and longs should not be shifted by zero or more than their number of bits-1
+- InterruptedException and ThreadDeath should not be ignored
+- Invalid "Date" values should not be used
+- Iterator.hasNext() should not call "Iterator.next()"
+- Iterator.next() methods should throw "NoSuchElementException"
+- Iterator should not return "this"
+- Jump statements should not occur in "finally" blocks
+- Locks should be released on all paths
+- Loop conditions should be true at least once
+- Loops should not be infinite
+- Loops with at most one iteration should be refactored
+- Map "computeIfAbsent()" and "computeIfPresent()" should not be used to add "null" values.
+- Map values should not be replaced unconditionally
+- Math should not be performed on floats
+- Math.abs and negation should not be used on numbers that could be "MIN_VALUE"
+- Math.clamp should be used with correct ranges
+- Math operands should be cast before assignment
+- Members ignored during record serialization should not be used
+- Methods and field names should not be the same or differ only by capitalization
+- Methods should not call same-class methods with incompatible "@Transactional" values
+- Methods should not be named "tostring", "hashcode" or "equal"
+- Methods with Spring proxying annotations should be public
+- Min and max used in combination should not always return the same value
+- Model attributes should follow the Java identifier naming convention
+- Mockito argument matchers should be used on all parameters
+- Non-primitive fields should not be "volatile"
+- Non-serializable objects should not be stored in "javax.servlet.http.HttpSession" instances
+- Non-thread-safe fields should not be static
+- Null pointers should not be dereferenced
+- Nullable injected fields and parameters should provide a default value
+- Object.wait(), Object.notify() and Object.notifyAll() should only be called from synchronized code
+- Only one method invocation is expected when testing checked exceptions
+- Optional value should only be accessed after calling isPresent()
+- Overrides should match their parent class methods in synchronization
+- Printf-style format strings should not lead to unexpected behavior at runtime
+- Random objects should be reused
+- Raw byte values should not be used in bitwise operations in combination with shifts
+- Read and readLine return values should be used
+- Recursion should not be infinite
+- Reflection should not be used to increase accessibility of records' fields
+- Reflection should not be used to check non-runtime annotations
+- Regex boundaries should not be used in a way that can never be matched
+- Regex lookahead assertions should not be contradictory
+- Regex patterns following a possessive quantifier should not always fail
+- Regular expressions should not overflow the stack
+- Regular expressions should be syntactically valid
+- Regular expressions should not contain empty groups
+- Regex alternatives should not be redundant
+- Repeated patterns in regular expressions should not match the empty string
+- Resources should be closed
+- Return values from functions without side effects should not be ignored
+- Return values should not be ignored when they contain the operation status code
+- RunFinalizersOnExit should not be called
+- ScheduledThreadPoolExecutor should not have 0 core threads
+- Serializable inner classes of non-serializable outer classes should be "static"
+- Servlets should not have mutable instance fields
+- Set appropriate Status Codes on HTTP responses
+- Spring "@Controller" classes should not use "@Scope"
+- SpringBootApplication and @ComponentScan should not be used in the default package
+- Strings and Boxed types should be compared using "equals()"
+- String operations with predictable outcomes should be avoided
+- String.indexOf should be used with correct ranges
+- Super.finalize() should be called at the end of "Object.finalize()" implementations
+- Synchronization should not be done on instances of value-based classes
+- Tests method should not be annotated with competing annotations
+- The non-serializable super class of a "Serializable" class should have a no-argument constructor
+- The Object.finalize() method should not be called
+- The value returned from a stream read should be checked
+- The regex escape sequence \\cX should only be used with characters in the @-_ range
+- Thread.run() should not be called directly
+- ThreadLocal variables should be cleaned up when no longer used
+- ToString() and clone() methods should not return null
+- Unary prefix operators should not be repeated
+- Unicode Grapheme Clusters should be avoided inside regex character classes
+- Unnecessary boxing and unboxing should be avoided
+- Unnecessary equality checks should not be made
+- Unsupported methods should not be called on some collection implementations
+- Use of the "@Async" annotation on methods declared within a "@Configuration" class in Spring Boot
+- @Bean methods for Singleton should not be invoked in "@Configuration" when proxyBeanMethods is false
+- @PathVariable annotation should be present if a path variable is used
+- Assertion methods should not be used within the try block of a try-catch catching an Error
+- .equals() should not be used to test the values of "Atomic" classes
+- Values should not be uselessly incremented
+- Variables should not be self-assigned
+- Virtual threads should not run tasks that include synchronized code
+- Virtual threads should be used for tasks that include heavy blocking operations
+- Volatile variables should not be used with compound operators
+- Wait should not be called when multiple locks are held
+- Wait(...) should be used instead of "Thread.sleep(...)" when a lock is held
+- Week Year ("YYYY") should not be used for date formatting
+- WriteObject argument must implement "Serializable"
+- Zero should not be a possible denominator
+- equals(Object obj) and hashCode() should be overridden in pairs
+- final classes should not have "protected" members
+- getClass should not be used for synchronization
+- "for" loop increment clauses should modify the loops' counters
+- instanceof should be used instead of "A.class.isInstance()"
+- methods with Spring proxy should not be called via "this"
+- notifyAll() should be preferred over "notify()"
+- null should not be used with "Optional"
+- @NonNull values should not be set to null
+- setDaemon, setPriority and getThreadGroup should not be invoked on virtual threads
+- "switch" statements should not have too many "case" clauses
+- "switch case" clauses should not have too many lines of code
+- "toString()" should never be called on a String object
+
+### Code Smell
+- AWS region should not be set with a hardcoded String
+- Abstract class names should comply with a naming convention
+- Abstract classes without fields should be converted to interfaces
+- An abstract class should have both abstract and concrete methods
+- Abstract methods should not be redundant
+- An iteration on a Collection should be performed on the type handled by the Collection
+- Anonymous classes should not have too many lines
+- Anonymous inner classes containing only one method should become lambdas
+- Annotation repetitions should not be wrapped
+- An open curly brace should be located at the beginning of a line
+- An open curly brace should be located at the end of a line
+- Array designators "[]" should be located after the type in method signatures
+- Array designators "[]" should be on the type, not the variable
+- Arrays and lists should not be copied using loops
+- Arrays should not be created for varargs parameters
+- Arrays.stream should be used for primitive arrays
+- AssertJ "assertThatThrownBy" should not be used alone
+- AssertJ assertTrue/assertFalse should be simplified to the corresponding dedicated assertion
+- Assertions should be complete
+- Assertion arguments should be passed in the correct order
+- Assertions should not be used to check the parameters of a public method
+- Assignments should not be made from within sub-expressions
+- Assignments should not be redundant
+- @Autowired should be used when multiple constructors are provided
+- Avoid using "FetchType.EAGER"
+- Avoid using boxed "Boolean" types directly in boolean expressions
+- Bean names should adhere to the naming conventions
+- Bean Validation (JSR 380) should be properly configured
+- Bluetooth should be configured to use low power
+- Boolean checks should not be inverted
+- Boolean expressions should not be gratuitous
+- Boolean literals should not be redundant
+- Call to Mockito method "verify", "when" or "given" should be simplified
+- Case insensitive string comparisons should be made without intermediate upper or lower casing
+- Catches should be combined
+- Catch clauses should do more than rethrow
+- Chained AssertJ assertions should be simplified to the corresponding dedicated assertion
+- Character classes in regular expressions should not contain only one character
+- Character classes in regular expressions should not contain the same character twice
+- Character classes should be preferred over reluctant quantifiers in regular expressions
+- Checked exceptions should not be thrown
+- Circular dependencies between classes across packages should be resolved
+- Circular dependencies between classes in the same package should be resolved
+- Class names should comply with a naming convention
+- Class names should not shadow interfaces or superclasses
+- Class variable fields should not have public accessibility
+- Classes and enums with private members should have a constructor
+- Classes and methods that rely on the default system encoding should not be used
+- Classes from "sun.*" packages should not be used
+- Classes named like "Exception" should extend "Exception" or a subclass
+- Classes should not be coupled to too many other classes
+- Classes should not be empty
+- Classes should not depend on an excessive number of classes (aka Monster Class)
+- Classes should not have too many "static" imports
+- Classes should not have too many fields
+- Classes should not have too many methods
+- Classes that override "clone" should be "Cloneable" and call "super.clone()"
+- Classes with only "static" methods should not be instantiated
+- Classes without "public" constructors should be "final"
+- Class.forName() should not load JDBC 4.0+ drivers
+- Clone should not be overridden
+- Cloneables should implement "clone"
+- A close curly brace should be located at the beginning of a line
+- Close curly brace and the next "else", "catch" and "finally" keywords should be located on the same line
+- Close curly brace and the next "else", "catch" and "finally" keywords should be on two different lines
+- Close() calls should not be redundant
+- Cognitive Complexity of methods should not be too high
+- Collect should be used with "Streams" instead of "list::add"
+- Collection constructors should not be used as java.util.function.Function
+- Collection methods with O(n) performance should be used carefully
+- Collection.isEmpty() should be used to test for emptiness
+- Collections.EMPTY_LIST, EMPTY_MAP, and EMPTY_SET should not be used
+- Comma-separated labels should be used in Switch with colon case
+- Composed "@RequestMapping" variants should be preferred
+- Comments should not be located at the end of lines of code
+- Comments should start with the appropriate number of slashes
+- Comparators should be "Serializable"
+- Conditional structures should start on new lines
+- A conditionally executed single line should be denoted by indentation
+- Consecutive AssertJ "assertThat" statements should be chained
+- Constant names should comply with a naming convention
+- Constant parameters in a "PreparedStatement" should not be set more than once
+- Constructors of an "abstract" class should not be declared "public"
+- Constructors should only call non-overridable methods
+- Constructors should not be used to instantiate "String", "BigInteger", "BigDecimal" and primitive-wrapper classes
+- Control flow statements "if", "for", "while", "switch" and "try" should not be nested too deeply
+- Control structures should use curly braces
+- @Controller should be replaced with @RestController
+- Credentials Provider should be set explicitly when creating a new "AwsClient"
+- Custom getter method should not be used to override record's getter behavior
+- DateUtils.truncate from Apache Commons Lang library should not be used
+- Declarations should use Java collection interfaces such as "List" rather than specific implementation classes such as "LinkedList"
+- Default annotation parameter values should not be passed as arguments
+- Default clauses should be last
+- Deprecated annotations should include explanations
+- Deprecated code should be removed
+- @Deprecated code marked for removal should never be used
+- @Deprecated code should not be used
+- Deprecated elements should have both the annotation and the Javadoc tag
+- Derived exceptions should not hide their parents' catch blocks
+- The diamond operator ("<>") should be used
+- Do not perform unnecessary mathematical operations
+- Empty arrays and collections should be returned instead of null
+- Empty lines should not be tested with regex MULTILINE flag
+- Empty statements should be removed
+- EnableAutoConfiguration should be fine-tuned
+- Enum values should be compared with "=="
+- Enumeration should not be implemented
+- Equality operators should not be used in "for" loop termination conditions
+- Equals method parameters should not be marked "@Nonnull"
+- Equals(Object obj) should be overridden along with the "compareTo(T obj)" method
+- == and != should not be used when "equals" is overridden
+- Error should not be extended
+- Escape sequences should not be used in text blocks
+- Escaped Unicode characters should not be used
+- Exact alarms should not be abused
+- Exception classes should have final fields
+- Exception handlers should preserve the original exceptions
+- Exception testing via JUnit @Test annotation should be avoided
+- Exception testing via JUnit ExpectedException rule should not be mixed with other assertions
+- Exception types should not be tested using "instanceof" in catch blocks
+- Exceptions should be either logged or rethrown but not both
+- Exceptions in "throws" clauses should not be superfluous
+- Execution of the Garbage Collector should be triggered only by the JVM
+- Exit methods should not be called
+- Expressions should not be too complex
+- Extensions and implementations should not be redundant
+- Factory method injection should be used in "@Configuration" classes
+- Field dependency injection should be avoided
+- A field should not duplicate the name of its containing class
+- Field names should comply with a naming convention
+- Fields in a "Serializable" class should either be transient or serializable
+- Fields in non-serializable classes should not be "transient"
+- Fields should not be initialized to default values
+- Files should contain only one top-level class or interface each
+- Files should end with a newline
+- Files should not be empty
+- Files should not have too many lines of code
+- Finalize should not set fields to "null"
+- For loop stop conditions should be invariant
+- A for loop should be used instead of a "while" loop
+- Format strings should be used correctly
+- Functions should not be defined with a variable number of arguments
+- Functional Interfaces should be as specialised as possible
+- Future keywords should not be used as names
+- Generic exceptions should never be thrown
+- Generic wildcard types should not be used in return types
+- Hash-based collections with known capacity should be initialized with the proper related static method.
+- High frame rates should not be used
+- If ... else if constructs should end with "else" clauses
+- IllegalMonitorStateException should not be caught
+- Increment (++) and decrement (--) operators should not be used in a method call or mixed with other operators in an expression
+- Inheritance tree of classes should not be too deep
+- Inner classes which do not reference their owning classes should be "static"
+- Inner classes should not have too many lines of code
+- Inner class calls to super class methods should be unambiguous
+- Instance methods should not write to "static" fields
+- Integer.toHexString should not be used to build hexadecimal strings
+- Interface names should comply with a naming convention
+- Interfaces should not solely consist of constants
+- @InitBinder methods should have void return type
+- JUnit test cases should call super methods
+- JUnit4 @Ignored and JUnit5 @Disabled annotations should be used to disable tests and should provide a rationale
+- Java 14 "switch" expression should be used
+- Java 8's "Files.exists" should not be used
+- Java features should be preferred to Guava
+- Java parser failure
+- Java.nio.Files#delete should be preferred
+- Java.time classes should be used for dates and times
+- Jump statements should not be redundant
+- Labels should not be used
+- Lambdas should be replaced with method references
+- Lambdas should not have too many lines
+- Lambdas should not invoke other lambdas synchronously
+- Lambdas containing only one statement should not nest this statement in a block
+- Lazy initialization of "static" fields should be "synchronized"
+- Limited dependence should be placed on operator precedence
+- Lines should not be too long
+- List.remove()' should not be used in ascending 'for' loops
+- Literal boolean values and nulls should not be used in assertions
+- Literal suffixes should be upper case
+- Local constants should follow naming conventions for constants
+- Local variable and method parameter names should comply with a naming convention
+- Local variables should not be declared and then immediately returned or thrown
+- Local variables should not shadow class fields
+- Local-Variable Type Inference should be used
+- Loggers should be "private static final" and should share a naming convention
+- Loggers should be named for their enclosing classes
+- Loops should not contain more than a single "break" or "continue" statement
+- Magic numbers should not be used
+- Main should not "throw" anything
+- Map.get and value test should be replaced with single method call
+- Maps with keys that are enum values should use the EnumMap implementation
+- Markdown, HTML and Javadoc tags should be consistent
+- Member variable visibility should be specified
+- The members of an interface or class declaration should appear in a pre-defined order
+- Members of Spring components should be injected
+- Mergeable "if" statements should be combined
+- Method names should comply with a naming convention
+- Method overrides should not change contracts
+- Method parameters should be declared with base types
+- Method parameters, caught exceptions and foreach variables' initial values should not be ignored
+- Methods and field names should not be the same or differ only by capitalization
+- Methods annotated with "@BeforeTransaction" or "@AfterTransaction" must respect the contract
+- Methods returning "Page" or "Slice" must take "Pageable" as an input parameter
+- Methods should not be empty
+- Methods should not be too complex
+- Methods should not have identical implementations
+- Methods should not have too many lines
+- Methods should not have too many parameters
+- Methods should not have too many return statements
+- Methods should not perform too many tasks (aka Brain method)
+- Methods should not return constants
+- Methods of "Random" that return floating point values should not be used in random integer generation
+- Methods returns should not be invariant
+- Methods setUp() and tearDown() should be correctly annotated starting with JUnit4
+- Methods with Spring proxy should not be called via "this"
+- Migrate your tests from JUnit4 to the new JUnit5 annotations
+- Mocking all non-private methods of a class should be avoided
+- Modifiers should be declared in the correct order
+- Modulus results should not be checked for direct equality
+- Motion Sensor should not use gyroscope
+- Multiline blocks should be enclosed in curly braces
+- Multiple loops over the same set should be combined
+- Multiple variables should not be declared on the same line
+- Names of regular expressions named groups should be used
+- Nested "enum"s should not be declared static
+- Nested blocks of code should not be left empty
+- Nested code blocks should not be used
+- Non-capturing groups without quantifier should not be used
+- Non-constructor methods should not have the same name as the enclosing class
+- Non-singleton Spring beans should not be injected into singleton beans
+- Null checks should not be used with "instanceof"
+- Null should not be returned from a "Boolean" method
+- NullPointerException should not be caught
+- NullPointerException should not be explicitly thrown
+- Nullness of parameters should be guaranteed
+- Number patterns should be regular
+- Objects should not be created only to invoke "getClass"
+- Object.finalize() should remain protected (versus public) when overriding
+- Object.wait should not be called on objects that implement "java.util.concurrent.locks.Condition"
+- Object.wait(...) and Condition.await(...) should be called inside a "while" loop
+- Octal values should not be used
+- Only static class initializers should be used
+- Optional should not be used for parameters
+- Optional REST parameters should have an object type
+- Overriding methods should do more than simply call the same method in the super class
+- @Override should be used on overriding and implementing methods
+- Package declaration should match source file directory
+- Package names should comply with a naming convention
+- Packages containing only "package-info.java" should be removed
+- Packages should have a javadoc file 'package-info.java'
+- Parameters should be passed in the correct order
+- Parentheses should be removed from a single lambda parameter when its type is inferred
+- Parsing should be used to convert "Strings" to primitives
+- Pattern Matching for "instanceof" operator should be used instead of simple "instanceof" + cast
+- Permitted types of a sealed class should be omitted if they are declared in the same file
+- Preconditions and logging arguments should not require evaluation
+- Primitive wrappers should not be instantiated only for "toString" or "compareTo" calls
+- Primitives should not be boxed just for "String" conversion
+- Private and "final" methods that don't access instance data should be "static"
+- Private fields only used as local variables in methods should become local variables
+- Private mutable members should not be stored or returned directly
+- Private methods called only by inner classes should be moved to those classes
+- Proper Sensor Resource Management
+- Public constants and fields initialized at declaration should be "static final" rather than merely "final"
+- Public methods should not contain selector arguments
+- Public methods should throw at most one checked exception
+- Public static fields should be constant
+- Public types, methods and fields (API) should be documented with Javadoc
+- Raw types should not be used
+- Read(byte[],int,int) should be overridden
+- ReadObject should not be "synchronized"
+- ReadResolve methods should be inheritable
+- Records should be used instead of ordinary classes when representing immutable data structure
+- Redundant assignments should be removed
+- Redundant casts should not be used
+- Redundant constructors/methods should be avoided in records
+- Redundant modifiers should not be used
+- Redundant nullability annotations should be removed
+- Redundant pairs of parentheses should be removed
+- Regexes containing characters subject to normalization should use the CANON_EQ flag
+- Region should be set explicitly when creating a new "AwsClient"
+- Regular expression quantifiers and character classes should be used concisely
+- Regular expressions should not be too complicated
+- Regular expressions should not contain multiple spaces
+- Reluctant quantifiers in regular expressions should be followed by an expression that can't match the empty string
+- Restricted Identifiers should not be used as Identifiers
+- Return of boolean expressions should not be wrapped into an "if-then-else" statement
+- Reusable resources should be initialized at construction time of Lambda functions
+- Reverse iteration should utilize reversed view
+- Reverse view should be used instead of reverse copy in read-only cases
+- Sections of code should not be commented out
+- SerialVersionUID field should not be set to '0L' in records
+- SerialVersionUID should not be declared blindly
+- Serializable classes should have a "serialVersionUID"
+- Serializable inner classes of "Serializable" classes should be static
+- Sets with elements that are enum values should be replaced with EnumSet
+- Short-circuit logic should be used in boolean contexts
+- Simple class names should be used
+- Simple string literal should be used for single line strings
+- The Singleton design pattern should be used with care
+- Single-character alternations in regular expressions should be replaced with character classes
+- SpEL expression should have a valid syntax
+- Spring beans should be considered by "@ComponentScan"
+- Spring components should use constructor injection
+- Spring's ModelAndViewAssert assertions should be used instead of other assertions
+- Standard functional interfaces should not be redefined
+- StandardCharsets constants should be preferred
+- Standard outputs should not be used directly to log anything
+- Statements should be on separate lines
+- Static base class members should not be accessed via derived types
+- Static fields should not be updated in constructors
+- Static non-final field names should comply with a naming convention
+- Static members should be accessed statically
+- Stream call chains should be simplified when possible
+- Stream.collect() calls should not be redundant
+- Stream.peek should be used with caution
+- Stream.toList() method should be used instead of "collectors" when unmodifiable list needed
+- String multiline concatenation should be replaced with Text Blocks
+- String operations should not rely on the default system locale
+- String offset-based methods should be preferred for finding substrings from offsets
+- String.isEmpty() should be used to test for emptiness
+- String.replace should be preferred to "String#replaceAll"
+- String.valueOf() should not be appended to a "String"
+- Strings should not be concatenated using '+' in a loop
+- Strings literals should be placed on the left side when checking for equality
+- String literals should not be duplicated
+- Subclasses that add fields to classes that override "equals" should also override "equals"
+- Superfluous "@ResponseBody" annotations should be removed
+- Superfluous curly brace quantifiers should be avoided
+- Switch arrow labels should not use redundant keywords
+- Switch cases should end with an unconditional "break" statement
+- Switch statements should have at least 3 "case" clauses
+- Switch statements should have "default" clauses
+- Switch statements and expressions should not be nested
+- Switch statements should not contain non-case labels
+- Switches should be used for sequences of simple "String" tests
+- Synchronized classes "Vector", "Hashtable", "Stack" and "StringBuffer" should not be used
+- Synchronizing on a "Lock" object should be avoided
+- Tabulation characters should not be used
+- Ternary operators should not be nested
+- The ternary operator should not be used
+- Test assertions should include messages
+- Test classes should comply with a naming convention
+- Test methods should comply with a naming convention
+- Test methods should not contain too many assertions
+- TestCases should contain tests
+- Tests should be kept in a dedicated source directory
+- Tests should be stable
+- Tests should include assertions
+- Tests should use fixed data instead of randomized data
+- Text blocks should not be used in complex expressions
+- "this" should not be exposed from constructors
+- Thread suspensions should not be vulnerable to Denial of Service attacks
+- Thread.sleep should not be used in tests
+- ThreadGroup should not be used
+- ThreadLocal.withInitial should be preferred
+- Threads should not be started in constructors
+- Throwable and Error should not be caught
+- ToString() should never be called on a String object
+- Track comments matching a regular expression
+- Track lack of copyright and license headers
+- Track uses of "CHECKSTYLE:OFF" suppression comments
+- Track uses of "FIXME" tags
+- Track uses of "NOPMD" suppression comments
+- Track uses of "NOSONAR" comments
+- Track uses of "TODO" tags
+- Track uses of "@SuppressWarnings" annotations
+- Track uses of disallowed classes
+- Track uses of disallowed constructors
+- Track uses of disallowed methods
+- Try-catch blocks should not be nested
+- Try-with-resources should be used
+- Two branches in a conditional structure should not have exactly the same implementation
+- Type parameter names should comply with a naming convention
+- Type parameters should not shadow other type parameters
+- Types of unused record components should be removed from pattern matching
+- Types should be used in lambdas
+- Types used as keys in Maps should implement Comparable
+- The upper bound of type variables and wildcards should not be "final"
+- URL.hashCode and URL.equals should be avoided
+- URIs should not be hardcoded
+- Underscores should be used to make large numbers readable
+- Unicode-aware versions of character classes should be preferred
+- Unnecessary bit operations should not be performed
+- Unnecessary imports should be removed
+- Unnecessary semicolons should be omitted
+- Unnamed variable declarations should use the "var" identifier
+- Unused "private" classes should be removed
+- Unused "private" fields should be removed
+- Unused "private" methods should be removed
+- Unused assignments should be removed
+- Unused exception parameter should use the unnamed variable pattern
+- Unused labels should be removed
+- Unused local variables should be removed
+- Unused method parameters should be removed
+- Unused type parameters should be removed
+- Use batch Processing in JDBC
+- Use built-in "Math.clamp" methods
+- Use Fused Location to optimize battery power
+- Use Java 14 "switch" expression
+- Use record pattern instead of explicit field access
+- Use switch instead of if-else chain to compare a variable against multiple cases
+- Use when instead of a single if inside a pattern match body
+- Utility classes should not have public constructors
+- @Value annotation should inject property or SpEL expression
+- Value-based objects should not be serialized
+- Vararg method arguments should not be confusing
+- Variables should not be declared before they are relevant
+- Whitespace and control characters in literals should be explicit
+- Whitespace for text block indent should be consistent
+- Wildcard imports should not be used
+- Write(byte[],int,int) should be overridden
+- @Cache* annotations should only be applied on concrete classes
+- @Cacheable and @CachePut should not be combined
+- entrySet() should be iterated when both the key and value are needed
+- enum fields should not be publicly mutable
+- if ... else if constructs should end with "else" clauses
+- private and "final" methods that don't access instance data should be "static"
+- @RequestMapping methods should not be "private"
+- 'serialVersionUID' field should not be set to '0L' in records
+- "switch" statements should have at least 3 "case" clauses

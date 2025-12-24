@@ -1,0 +1,50 @@
+{
+  "name": "review-robo",
+  "version": "1.0.0",
+  "description": "Automated MR Code Review System - cursor-agent CLI Integration",
+  "main": "dist/index.js",
+  "bin": {
+    "mr-review": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "rm -rf dist .cursor/reviews && tsc && node dist/index.js",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "test:line-mapping": "tsc test-line-number-mapping.ts && node test-line-number-mapping.js",
+    "semantic-release": "semantic-release",
+    "release": "semantic-release --no-ci",
+    "release:dry": "semantic-release --dry-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ixigo/gitlab-ai-mr-reviewer.git"
+  },
+  "keywords": [
+    "code-review",
+    "gitlab",
+    "ai",
+    "cursor-agent",
+    "automation"
+  ],
+  "author": "Dinesh Khoja",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/gitlab": "^13.2.9",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@types/node": "^20.10.0",
+    "semantic-release": "^24.2.9",
+    "typescript": "^5.3.3"
+  }
+}
