@@ -1,5 +1,5 @@
 # Use custom Node 20 base image
-FROM 119677764340.dkr.ecr.ap-south-1.amazonaws.com/devops/node:20.11.1 AS base
+FROM node:20.11.1 AS base
 
 # Install Cursor CLI (assuming bash, curl, ca-certificates, git are already in base image)
 RUN curl https://cursor.com/install -fsS | bash
