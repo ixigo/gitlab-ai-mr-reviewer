@@ -1,0 +1,616 @@
+---
+description: Design principles and SOLID principles for Kotlin applications
+globs: ["**/*.kt"]
+alwaysApply: true
+---
+
+# Design Principles and SOLID Principles for Kotlin
+
+## Core Design Principles
+
+### 1. SOLID Principles
+
+#### Single Responsibility Principle (SRP)
+
+**Rule**: Each class should have one reason to change.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Multiple responsibilities
+class UserManager {
+    fun saveUser(user: User) { /* database logic */ }
+    fun sendEmail(user: User) { /* email logic */ }
+    fun validateUser(user: User) { /* validation logic */ }
+    fun formatUserData(user: User) { /* formatting logic */ }
+}
+
+// ✅ GOOD - Single responsibility
+class UserRepository {
+    fun saveUser(user: User) { /* only database logic */ }
+}
+
+class EmailService {
+    fun sendEmail(user: User) { /* only email logic */ }
+}
+
+class UserValidator {
+    fun validate(user: User): ValidationResult { /* only validation */ }
+}
+
+class UserFormatter {
+    fun format(user: User): FormattedUser { /* only formatting */ }
+}
+```
+
+#### Open/Closed Principle (OCP)
+
+**Rule**: Open for extension, closed for modification.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Must modify class to add new types
+class PaymentProcessor {
+    fun processPayment(type: String, amount: Double) {
+        when (type) {
+            "credit" -> processCreditCard(amount)
+            "debit" -> processDebitCard(amount)
+            // Must modify here to add "paypal"
+        }
+    }
+}
+
+// ✅ GOOD - Extensible without modification
+interface PaymentMethod {
+    fun process(amount: Double): PaymentResult
+}
+
+class CreditCardPayment : PaymentMethod {
+    override fun process(amount: Double): PaymentResult {
+        // Implementation
+    }
+}
+
+class DebitCardPayment : PaymentMethod {
+    override fun process(amount: Double): PaymentResult {
+        // Implementation
+    }
+}
+
+class PaymentProcessor {
+    fun processPayment(method: PaymentMethod, amount: Double): PaymentResult {
+        return method.process(amount)  // No modification needed for new types
+    }
+}
+```
+
+#### Liskov Substitution Principle (LSP)
+
+**Rule**: Subtypes must be substitutable for their base types.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Violates LSP
+open class Rectangle {
+    open var width: Int = 0
+    open var height: Int = 0
+}
+
+class Square : Rectangle() {
+    override var width: Int
+        get() = super.width
+        set(value) {
+            super.width = value
+            super.height = value  // Breaks rectangle contract
+        }
+    
+    override var height: Int
+        get() = super.height
+        set(value) {
+            super.width = value
+            super.height = value  // Breaks rectangle contract
+        }
+}
+
+// ✅ GOOD - Proper inheritance or composition
+interface Shape {
+    fun area(): Int
+}
+
+class Rectangle(val width: Int, val height: Int) : Shape {
+    override fun area() = width * height
+}
+
+class Square(val side: Int) : Shape {
+    override fun area() = side * side
+}
+```
+
+#### Interface Segregation Principle (ISP)
+
+**Rule**: Clients should not depend on interfaces they don't use.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Fat interface
+interface Worker {
+    fun work()
+    fun eat()
+    fun sleep()
+}
+
+class Human : Worker {
+    override fun work() { }
+    override fun eat() { }
+    override fun sleep() { }
+}
+
+class Robot : Worker {
+    override fun work() { }
+    override fun eat() { throw UnsupportedOperationException() }  // Robot doesn't eat!
+    override fun sleep() { throw UnsupportedOperationException() }  // Robot doesn't sleep!
+}
+
+// ✅ GOOD - Segregated interfaces
+interface Workable {
+    fun work()
+}
+
+interface Eatable {
+    fun eat()
+}
+
+interface Sleepable {
+    fun sleep()
+}
+
+class Human : Workable, Eatable, Sleepable {
+    override fun work() { }
+    override fun eat() { }
+    override fun sleep() { }
+}
+
+class Robot : Workable {
+    override fun work() { }
+}
+```
+
+#### Dependency Inversion Principle (DIP)
+
+**Rule**: Depend on abstractions, not concretions.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Depends on concrete implementation
+class UserService {
+    private val repository = UserRepositoryImpl()  // Concrete dependency
+    
+    fun getUser(id: String): User {
+        return repository.getUser(id)
+    }
+}
+
+// ✅ GOOD - Depends on abstraction
+class UserService(
+    private val repository: UserRepository  // Interface/abstraction
+) {
+    fun getUser(id: String): User {
+        return repository.getUser(id)
+    }
+}
+```
+
+---
+
+## II. Design Patterns for Kotlin
+
+### Repository Pattern
+
+**Purpose**: Abstract data access layer.
+
+```kotlin
+// Domain layer - interface
+interface UserRepository {
+    suspend fun getUser(id: String): Result<User>
+    suspend fun saveUser(user: User): Result<Unit>
+}
+
+// Data layer - implementation
+class UserRepositoryImpl(
+    private val localDataSource: UserLocalDataSource,
+    private val remoteDataSource: UserRemoteDataSource
+) : UserRepository {
+    override suspend fun getUser(id: String): Result<User> {
+        return try {
+            val localUser = localDataSource.getUser(id)
+            if (localUser != null) {
+                Result.Success(localUser)
+            } else {
+                val remoteUser = remoteDataSource.getUser(id)
+                localDataSource.saveUser(remoteUser)
+                Result.Success(remoteUser)
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+}
+```
+
+### Use Case Pattern
+
+**Purpose**: Encapsulate business logic in single-purpose classes.
+
+```kotlin
+class GetUserUseCase(
+    private val repository: UserRepository
+) {
+    suspend operator fun invoke(userId: String): Result<User> {
+        if (userId.isBlank()) {
+            return Result.Error(IllegalArgumentException("User ID cannot be blank"))
+        }
+        return repository.getUser(userId)
+    }
+}
+
+class SaveUserUseCase(
+    private val repository: UserRepository
+) {
+    suspend operator fun invoke(user: User): Result<Unit> {
+        if (!user.isValid()) {
+            return Result.Error(IllegalArgumentException("Invalid user data"))
+        }
+        return repository.saveUser(user)
+    }
+}
+```
+
+### Strategy Pattern
+
+**Purpose**: Encapsulate algorithms and make them interchangeable.
+
+```kotlin
+interface SortingStrategy {
+    fun <T : Comparable<T>> sort(items: List<T>): List<T>
+}
+
+class QuickSortStrategy : SortingStrategy {
+    override fun <T : Comparable<T>> sort(items: List<T>): List<T> {
+        // Quick sort implementation
+        return items.sorted()
+    }
+}
+
+class MergeSortStrategy : SortingStrategy {
+    override fun <T : Comparable<T>> sort(items: List<T>): List<T> {
+        // Merge sort implementation
+        return items.sorted()
+    }
+}
+
+class Sorter(private val strategy: SortingStrategy) {
+    fun <T : Comparable<T>> sort(items: List<T>): List<T> {
+        return strategy.sort(items)
+    }
+}
+```
+
+### Observer Pattern (Reactive)
+
+**Purpose**: Notify multiple observers of state changes.
+
+```kotlin
+class UserViewModel : ViewModel() {
+    private val _userState = MutableStateFlow<UserState>(UserState.Loading)
+    val userState: StateFlow<UserState> = _userState.asStateFlow()
+    
+    fun loadUser(userId: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.Loading
+            when (val result = getUserUseCase(userId)) {
+                is Result.Success -> _userState.value = UserState.Success(result.data)
+                is Result.Error -> _userState.value = UserState.Error(result.exception)
+            }
+        }
+    }
+}
+```
+
+### Factory Pattern
+
+**Purpose**: Create objects without specifying exact classes.
+
+```kotlin
+sealed class PaymentMethod {
+    abstract fun process(amount: Double): PaymentResult
+    
+    companion object {
+        fun create(type: PaymentType): PaymentMethod {
+            return when (type) {
+                PaymentType.CREDIT_CARD -> CreditCardPayment()
+                PaymentType.DEBIT_CARD -> DebitCardPayment()
+                PaymentType.PAYPAL -> PayPalPayment()
+            }
+        }
+    }
+}
+```
+
+### Builder Pattern (Kotlin Style)
+
+**Purpose**: Construct complex objects step by step.
+
+```kotlin
+data class User(
+    val id: String,
+    val name: String,
+    val email: String? = null,
+    val age: Int? = null,
+    val address: String? = null
+) {
+    class Builder {
+        private var id: String = ""
+        private var name: String = ""
+        private var email: String? = null
+        private var age: Int? = null
+        private var address: String? = null
+        
+        fun id(id: String) = apply { this.id = id }
+        fun name(name: String) = apply { this.name = name }
+        fun email(email: String) = apply { this.email = email }
+        fun age(age: Int) = apply { this.age = age }
+        fun address(address: String) = apply { this.address = address }
+        
+        fun build() = User(id, name, email, age, address)
+    }
+}
+
+// Usage
+val user = User.Builder()
+    .id("123")
+    .name("John")
+    .email("john@example.com")
+    .build()
+```
+
+---
+
+## III. Clean Architecture Principles
+
+### Layer Separation
+
+**Rule**: Clear boundaries between layers with dependency rule.
+
+```
+┌─────────────────────────────────────┐
+│      Presentation Layer             │
+│  (UI, ViewModels, UI Models)        │
+└──────────────┬──────────────────────┘
+               │ depends on
+               ▼
+┌─────────────────────────────────────┐
+│        Domain Layer                 │
+│  (Use Cases, Domain Models)        │
+└──────────────┬──────────────────────┘
+               │ depends on
+               ▼
+┌─────────────────────────────────────┐
+│         Data Layer                  │
+│  (Repositories, Data Sources)      │
+└─────────────────────────────────────┘
+```
+
+**Dependency Rule**: Dependencies point inward. Outer layers depend on inner layers.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Domain depends on Data
+// domain/UserRepository.kt
+interface UserRepository {
+    suspend fun getUser(id: String): UserDto  // DTO in domain!
+}
+
+// ✅ GOOD - Domain is independent
+// domain/UserRepository.kt
+interface UserRepository {
+    suspend fun getUser(id: String): User  // Domain model
+}
+
+// data/UserRepositoryImpl.kt
+class UserRepositoryImpl : UserRepository {
+    override suspend fun getUser(id: String): User {
+        val dto = apiService.getUser(id)  // DTO stays in data layer
+        return dto.toDomain()  // Map to domain
+    }
+}
+```
+
+### Dependency Injection
+
+**Rule**: Inject dependencies rather than creating them.
+
+```kotlin
+// ❌ BAD - Hard dependency
+class UserService {
+    private val repository = UserRepositoryImpl()  // Hard-coded
+    
+    fun getUser(id: String): User {
+        return repository.getUser(id)
+    }
+}
+
+// ✅ GOOD - Dependency injection
+class UserService(
+    private val repository: UserRepository  // Injected
+) {
+    fun getUser(id: String): User {
+        return repository.getUser(id)
+    }
+}
+```
+
+---
+
+## IV. Composition Over Inheritance
+
+**Rule**: Prefer composition and delegation over inheritance.
+
+```kotlin
+// ❌ BAD - Deep inheritance
+open class Animal {
+    open fun eat() { }
+    open fun sleep() { }
+}
+
+open class Mammal : Animal() {
+    override fun eat() { }
+}
+
+class Dog : Mammal() {
+    override fun eat() { }
+}
+
+// ✅ GOOD - Composition
+interface Eatable {
+    fun eat()
+}
+
+interface Sleepable {
+    fun sleep()
+}
+
+class Dog(
+    private val eatingBehavior: Eatable,
+    private val sleepingBehavior: Sleepable
+) : Eatable by eatingBehavior, Sleepable by sleepingBehavior
+```
+
+---
+
+## V. Encapsulation
+
+**Rule**: Hide implementation details and expose only necessary interfaces.
+
+```kotlin
+// ❌ BAD - Exposed internals
+class UserManager {
+    var users: MutableList<User> = mutableListOf()  // Public mutable
+    
+    fun addUser(user: User) {
+        users.add(user)
+    }
+}
+
+// ✅ GOOD - Encapsulated
+class UserManager {
+    private val _users = mutableListOf<User>()
+    val users: List<User> get() = _users.toList()  // Immutable view
+    
+    fun addUser(user: User) {
+        _users.add(user)
+    }
+}
+```
+
+---
+
+## VI. Favor Immutability
+
+**Rule**: Prefer immutable data structures and objects.
+
+```kotlin
+// ❌ BAD - Mutable
+data class User(
+    var name: String,  // var
+    var age: Int
+)
+
+// ✅ GOOD - Immutable
+data class User(
+    val name: String,  // val
+    val age: Int
+)
+
+// For updates, use copy()
+val updatedUser = user.copy(name = "New Name")
+```
+
+---
+
+## VII. Separation of Concerns
+
+**Rule**: Each component should have a single, well-defined responsibility.
+
+```kotlin
+// ❌ BAD - Mixed concerns
+class UserActivity : AppCompatActivity() {
+    fun loadUser() {
+        // Network call
+        val response = apiService.getUser("123")
+        // Database save
+        database.saveUser(response)
+        // UI update
+        textView.text = response.name
+    }
+}
+
+// ✅ GOOD - Separated concerns
+class UserActivity : AppCompatActivity() {
+    private val viewModel: UserViewModel by viewModels()
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.userState.observe(this) { state ->
+            when (state) {
+                is UserState.Success -> textView.text = state.user.name
+                is UserState.Error -> showError(state.error)
+            }
+        }
+        viewModel.loadUser("123")
+    }
+}
+
+class UserViewModel : ViewModel() {
+    private val getUserUseCase: GetUserUseCase
+    
+    fun loadUser(id: String) {
+        viewModelScope.launch {
+            getUserUseCase(id)
+        }
+    }
+}
+```
+
+---
+
+## VIII. Interface-Based Design
+
+**Rule**: Program to interfaces, not implementations.
+
+```kotlin
+// ✅ GOOD - Interface-based
+interface DataSource {
+    suspend fun getData(): Result<Data>
+}
+
+class RemoteDataSource : DataSource {
+    override suspend fun getData(): Result<Data> {
+        // Remote implementation
+    }
+}
+
+class LocalDataSource : DataSource {
+    override suspend fun getData(): Result<Data> {
+        // Local implementation
+    }
+}
+
+class Repository(
+    private val dataSource: DataSource  // Depends on interface
+) {
+    suspend fun getData() = dataSource.getData()
+}
+```
+
+---
+
+These principles ensure maintainable, testable, and scalable Kotlin applications following industry best practices.

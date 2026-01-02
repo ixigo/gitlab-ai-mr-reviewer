@@ -1,0 +1,841 @@
+---
+description: Comprehensive Kotlin development rules and best practices
+globs: ["**/*.kt"]
+alwaysApply: true
+---
+
+# Kotlin Development Rules and Best Practices
+
+As an expert Kotlin developer following Google, Meta, and industry best practices, enforce these rules rigorously.
+
+---
+
+## I. String Resources & Hard-Coded Strings
+
+### CRITICAL: No Hard-Coded Strings
+
+**Rule**: All user-facing strings MUST be in string resources (Android) or constants/enum classes.
+
+**Why**: 
+- Internationalization (i18n) support
+- Consistency across the app
+- Easy maintenance and updates
+- Centralized string management
+
+**Violations**:
+```kotlin
+// ❌ BAD - Hard-coded string
+textView.text = "Welcome to the app"
+button.text = "Click me"
+Toast.makeText(context, "Error occurred", Toast.LENGTH_SHORT).show()
+
+// ✅ GOOD - String resource
+textView.text = getString(R.string.welcome_message)
+button.text = getString(R.string.button_click)
+Toast.makeText(context, getString(R.string.error_occurred), Toast.LENGTH_SHORT).show()
+```
+
+**For Non-Android Projects**:
+```kotlin
+// ❌ BAD
+val message = "User not found"
+
+// ✅ GOOD - Use constants or sealed class
+object AppStrings {
+    const val USER_NOT_FOUND = "User not found"
+}
+
+// Or better - use sealed class for type safety
+sealed class AppMessage(val text: String) {
+    object UserNotFound : AppMessage("User not found")
+    object NetworkError : AppMessage("Network error occurred")
+}
+```
+
+**Exceptions**:
+- Log messages (but prefer structured logging)
+- Debug/test code
+- Internal constants that are never displayed to users
+
+---
+
+## II. Don't Repeat Yourself (DRY) Principles
+
+### Code Duplication Detection
+
+**Rule**: Identify and eliminate code duplication. Extract common logic into reusable functions, extension functions, or utility classes.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Duplicated validation logic
+fun validateEmail(email: String): Boolean {
+    return email.contains("@") && email.contains(".")
+}
+
+fun validateUserEmail(email: String): Boolean {
+    return email.contains("@") && email.contains(".")
+}
+
+// ✅ GOOD - Single source of truth
+object ValidationUtils {
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+}
+
+// Or use extension function
+fun String.isValidEmail(): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(this).matches()
+}
+```
+
+**Reuse Existing Code**:
+```kotlin
+// ❌ BAD - Reimplementing existing functionality
+fun formatDate(date: Long): String {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = date
+    return "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH)}/${calendar.get(Calendar.YEAR)}"
+}
+
+// ✅ GOOD - Use existing libraries/functions
+fun formatDate(date: Long): String {
+    return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(date))
+}
+
+// Or better - use modern Kotlin date-time
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+fun formatDate(timestamp: Long): String {
+    return Instant.ofEpochMilli(timestamp)
+        .atZone(ZoneId.systemDefault())
+        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+}
+```
+
+**Check for Existing Utilities**:
+- Before writing new code, check if similar functionality exists in:
+  - Standard library (kotlinx.coroutines, kotlinx.serialization)
+  - Project utility classes
+  - Third-party libraries already in the project
+  - Android framework classes
+
+---
+
+## III. Null Safety
+
+### Enforce Null Safety
+
+**Rule**: Use Kotlin's null safety features. Avoid `!!` (force unwrap) and prefer safe calls, elvis operator, or proper null handling.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Force unwrap
+val length = user!!.name!!.length
+
+// ❌ BAD - Unnecessary nullable
+fun processUser(user: User?): String {
+    return user.name  // Compiler error, but shows bad design
+}
+
+// ✅ GOOD - Safe calls and elvis
+val length = user?.name?.length ?: 0
+
+// ✅ GOOD - Proper null handling
+fun processUser(user: User?): String {
+    return user?.name ?: "Unknown"
+}
+
+// ✅ GOOD - Early return
+fun processUser(user: User?): String {
+    if (user == null) return "Unknown"
+    return user.name
+}
+```
+
+**Use Sealed Classes for State**:
+```kotlin
+// ❌ BAD
+data class Result(val data: Data?, val error: Error?)
+
+// ✅ GOOD
+sealed class Result<out T> {
+    data class Success<T>(val data: T) : Result<T>()
+    data class Error(val exception: Throwable) : Result<Nothing>()
+    object Loading : Result<Nothing>()
+}
+```
+
+---
+
+## IV. Memory Leaks & Resource Management
+
+### Prevent Memory Leaks
+
+**Rule**: Properly manage resources, coroutines, listeners, and references to prevent memory leaks.
+
+**Common Leak Sources**:
+
+1. **Coroutines**:
+```kotlin
+// ❌ BAD - Leak: coroutine continues after activity destroyed
+class MyActivity : AppCompatActivity() {
+    fun loadData() {
+        GlobalScope.launch {  // Never use GlobalScope
+            fetchData()
+        }
+    }
+}
+
+// ✅ GOOD - Use lifecycle-aware scope
+class MyActivity : AppCompatActivity() {
+    fun loadData() {
+        lifecycleScope.launch {
+            fetchData()
+        }
+    }
+}
+
+// ✅ GOOD - ViewModel scope
+class MyViewModel : ViewModel() {
+    fun loadData() {
+        viewModelScope.launch {
+            fetchData()
+        }
+    }
+}
+```
+
+2. **Listeners & Callbacks**:
+```kotlin
+// ❌ BAD - Leak: listener not removed
+class MyFragment : Fragment() {
+    private val listener = object : SomeListener {
+        override fun onEvent() { }
+    }
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        SomeManager.addListener(listener)  // Never removed!
+    }
+}
+
+// ✅ GOOD - Remove in onDestroy
+class MyFragment : Fragment() {
+    private val listener = object : SomeListener {
+        override fun onEvent() { }
+    }
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        SomeManager.addListener(listener)
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        SomeManager.removeListener(listener)
+    }
+}
+```
+
+3. **Static References**:
+```kotlin
+// ❌ BAD - Static reference to context/activity
+object AppManager {
+    var context: Context? = null  // Leak!
+}
+
+// ✅ GOOD - Use ApplicationContext or WeakReference
+object AppManager {
+    private var contextRef: WeakReference<Context>? = null
+    
+    fun setContext(context: Context) {
+        contextRef = WeakReference(context.applicationContext)
+    }
+}
+```
+
+4. **Inner Classes**:
+```kotlin
+// ❌ BAD - Non-static inner class holds outer reference
+class Outer {
+    inner class Inner {  // Holds reference to Outer
+        fun doSomething() {
+            // Can access Outer's members
+        }
+    }
+}
+
+// ✅ GOOD - Use nested class or pass needed data
+class Outer {
+    class Inner {  // No reference to Outer
+        fun doSomething() {
+        }
+    }
+}
+```
+
+5. **Resource Cleanup**:
+```kotlin
+// ❌ BAD - File not closed
+fun readFile(path: String): String {
+    val file = File(path)
+    return file.readText()  // Resource leak if exception occurs
+}
+
+// ✅ GOOD - Use use() for automatic cleanup
+fun readFile(path: String): String {
+    return File(path).inputStream().bufferedReader().use { it.readText() }
+}
+
+// ✅ GOOD - For custom resources
+class ResourceManager {
+    private var resource: Closeable? = null
+    
+    fun acquire() {
+        resource = SomeResource()
+    }
+    
+    fun release() {
+        resource?.close()
+        resource = null
+    }
+}
+```
+
+---
+
+## V. Coroutines Best Practices
+
+### Proper Coroutine Usage
+
+**Rule**: Use coroutines correctly with proper scopes, dispatchers, and error handling.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Wrong dispatcher
+suspend fun fetchData() {
+    withContext(Dispatchers.Main) {  // Network on Main thread!
+        apiService.getData()
+    }
+}
+
+// ✅ GOOD - Use appropriate dispatcher
+suspend fun fetchData() = withContext(Dispatchers.IO) {
+    apiService.getData()
+}
+
+// ❌ BAD - No error handling
+fun loadData() {
+    viewModelScope.launch {
+        val data = repository.getData()  // Can throw exception
+        updateUI(data)
+    }
+}
+
+// ✅ GOOD - Proper error handling
+fun loadData() {
+    viewModelScope.launch {
+        try {
+            val data = repository.getData()
+            updateUI(data)
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
+}
+
+// ✅ GOOD - Use Result wrapper
+fun loadData() {
+    viewModelScope.launch {
+        when (val result = repository.getData()) {
+            is Result.Success -> updateUI(result.data)
+            is Result.Error -> handleError(result.exception)
+            is Result.Loading -> showLoading()
+        }
+    }
+}
+```
+
+**Flow Best Practices**:
+```kotlin
+// ❌ BAD - No backpressure handling
+fun observeData(): Flow<Data> {
+    return flow {
+        while (true) {
+            emit(fetchData())  // Can overwhelm collector
+            delay(100)
+        }
+    }
+}
+
+// ✅ GOOD - Use buffer and proper operators
+fun observeData(): Flow<Data> = flow {
+    while (true) {
+        emit(fetchData())
+        delay(100)
+    }
+}.buffer(10)  // Buffer to handle backpressure
+    .catch { e -> emitError(e) }
+    .flowOn(Dispatchers.IO)
+```
+
+---
+
+## VI. Code Structure & Organization
+
+### Clean Code Structure
+
+**Rule**: Follow clean architecture principles with proper layer separation.
+
+**Layer Structure**:
+```
+presentation/
+  ├── ui/
+  │   ├── activities/
+  │   ├── fragments/
+  │   └── adapters/
+  ├── viewmodels/
+  └── mappers/  (UI models <-> Domain models)
+
+domain/
+  ├── models/
+  ├── usecases/
+  ├── repositories/  (interfaces)
+  └── exceptions/
+
+data/
+  ├── repositories/  (implementations)
+  ├── datasources/
+  │   ├── local/
+  │   └── remote/
+  ├── mappers/  (DTO <-> Domain)
+  └── models/  (DTOs)
+```
+
+**Class Organization**:
+```kotlin
+// ✅ GOOD - Proper class structure
+class UserRepositoryImpl(
+    private val localDataSource: UserLocalDataSource,
+    private val remoteDataSource: UserRemoteDataSource
+) : UserRepository {
+    
+    // 1. Companion object / constants
+    companion object {
+        private const val CACHE_DURATION = 5.minutes
+    }
+    
+    // 2. Properties
+    private var cachedUsers: List<User>? = null
+    private var lastFetchTime: Long = 0
+    
+    // 3. Public methods
+    override suspend fun getUsers(): Flow<List<User>> {
+        return flow {
+            emit(fetchUsers())
+        }
+    }
+    
+    // 4. Private methods
+    private suspend fun fetchUsers(): List<User> {
+        // Implementation
+    }
+}
+```
+
+---
+
+## VII. Design Patterns
+
+### Use Appropriate Design Patterns
+
+**Repository Pattern**:
+```kotlin
+// ✅ GOOD - Repository pattern
+interface UserRepository {
+    suspend fun getUser(id: String): Result<User>
+    suspend fun getUsers(): Flow<List<User>>
+}
+
+class UserRepositoryImpl(
+    private val localDataSource: UserLocalDataSource,
+    private val remoteDataSource: UserRemoteDataSource
+) : UserRepository {
+    override suspend fun getUser(id: String): Result<User> {
+        return try {
+            val localUser = localDataSource.getUser(id)
+            if (localUser != null && !isCacheExpired(localUser)) {
+                Result.Success(localUser)
+            } else {
+                val remoteUser = remoteDataSource.getUser(id)
+                localDataSource.saveUser(remoteUser)
+                Result.Success(remoteUser)
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+}
+```
+
+**Use Case Pattern**:
+```kotlin
+// ✅ GOOD - Single responsibility use case
+class GetUserUseCase(
+    private val repository: UserRepository
+) {
+    suspend operator fun invoke(userId: String): Result<User> {
+        if (userId.isBlank()) {
+            return Result.Error(IllegalArgumentException("User ID cannot be blank"))
+        }
+        return repository.getUser(userId)
+    }
+}
+```
+
+**Observer Pattern (Flow)**:
+```kotlin
+// ✅ GOOD - Use Flow for reactive programming
+class UserViewModel(
+    private val getUserUseCase: GetUserUseCase
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow<UserUiState>(UserUiState.Loading)
+    val uiState: StateFlow<UserUiState> = _uiState
+    
+    fun loadUser(userId: String) {
+        viewModelScope.launch {
+            _uiState.value = UserUiState.Loading
+            when (val result = getUserUseCase(userId)) {
+                is Result.Success -> _uiState.value = UserUiState.Success(result.data)
+                is Result.Error -> _uiState.value = UserUiState.Error(result.exception)
+            }
+        }
+    }
+}
+```
+
+---
+
+## VIII. Architecture Rules
+
+### Clean Architecture Compliance
+
+**Dependency Rule**: Dependencies point inward. Outer layers depend on inner layers, not vice versa.
+
+```
+Presentation → Domain ← Data
+     ↓              ↑
+     └──────────────┘
+```
+
+**Violations**:
+```kotlin
+// ❌ BAD - Domain depends on Data
+// domain/UserRepository.kt
+interface UserRepository {
+    suspend fun getUser(id: String): UserDto  // Using DTO in domain!
+}
+
+// ✅ GOOD - Domain uses domain models
+// domain/UserRepository.kt
+interface UserRepository {
+    suspend fun getUser(id: String): User  // Domain model
+}
+
+// data/UserRepositoryImpl.kt
+class UserRepositoryImpl : UserRepository {
+    override suspend fun getUser(id: String): User {
+        val dto = apiService.getUser(id)  // DTO in data layer
+        return dto.toDomain()  // Map to domain model
+    }
+}
+```
+
+**Layer Responsibilities**:
+
+1. **Presentation Layer**:
+   - UI components (Activities, Fragments, Composables)
+   - ViewModels (state management)
+   - UI models (data classes for UI)
+   - Mappers (Domain → UI)
+
+2. **Domain Layer**:
+   - Business logic
+   - Use cases
+   - Domain models (pure Kotlin)
+   - Repository interfaces
+   - No Android/UI dependencies
+
+3. **Data Layer**:
+   - Repository implementations
+   - Data sources (local, remote)
+   - DTOs (data transfer objects)
+   - Mappers (DTO → Domain)
+   - Database, API clients
+
+---
+
+## IX. Error Handling
+
+### Comprehensive Error Handling
+
+**Rule**: Handle all errors gracefully with proper error types and user-friendly messages.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Swallowing exceptions
+fun processData() {
+    try {
+        riskyOperation()
+    } catch (e: Exception) {
+        // Silent failure
+    }
+}
+
+// ❌ BAD - Generic exception
+fun processData() {
+    try {
+        riskyOperation()
+    } catch (e: Exception) {
+        Log.e("Tag", "Error: ${e.message}")  // Not user-friendly
+    }
+}
+
+// ✅ GOOD - Specific error handling
+sealed class AppError : Exception() {
+    object NetworkError : AppError()
+    object NotFoundError : AppError()
+    data class ValidationError(val field: String, val message: String) : AppError()
+    data class UnknownError(val throwable: Throwable) : AppError()
+}
+
+fun processData(): Result<Data> {
+    return try {
+        val data = riskyOperation()
+        Result.Success(data)
+    } catch (e: NetworkException) {
+        Result.Error(AppError.NetworkError)
+    } catch (e: NotFoundException) {
+        Result.Error(AppError.NotFoundError)
+    } catch (e: Exception) {
+        Result.Error(AppError.UnknownError(e))
+    }
+}
+```
+
+---
+
+## X. Performance Optimization
+
+### Performance Best Practices
+
+**Rule**: Write performant code with proper data structures and algorithms.
+
+**Violations**:
+```kotlin
+// ❌ BAD - Inefficient string concatenation
+fun buildMessage(items: List<String>): String {
+    var message = ""
+    for (item in items) {
+        message += item  // Creates new string each time
+    }
+    return message
+}
+
+// ✅ GOOD - Use StringBuilder or joinToString
+fun buildMessage(items: List<String>): String {
+    return items.joinToString(separator = "")
+}
+
+// ❌ BAD - Unnecessary object creation
+fun processItems(items: List<Item>) {
+    items.map { it.copy() }  // Unnecessary copies
+        .filter { it.isValid() }
+        .forEach { process(it) }
+}
+
+// ✅ GOOD - Chain operations efficiently
+fun processItems(items: List<Item>) {
+    items.filter { it.isValid() }
+        .forEach { process(it) }
+}
+```
+
+**Collection Operations**:
+```kotlin
+// ❌ BAD - Multiple iterations
+val validItems = items.filter { it.isValid() }
+val processedItems = validItems.map { process(it) }
+val sortedItems = processedItems.sortedBy { it.id }
+
+// ✅ GOOD - Single chain
+val result = items
+    .filter { it.isValid() }
+    .map { process(it) }
+    .sortedBy { it.id }
+```
+
+---
+
+## XI. Testing
+
+### Test Coverage & Quality
+
+**Rule**: Write comprehensive tests with good coverage and proper test structure.
+
+**Test Structure**:
+```kotlin
+// ✅ GOOD - Clear test structure
+class UserRepositoryTest {
+    
+    @Mock
+    private lateinit var localDataSource: UserLocalDataSource
+    
+    @Mock
+    private lateinit var remoteDataSource: UserRemoteDataSource
+    
+    private lateinit var repository: UserRepositoryImpl
+    
+    @Before
+    fun setup() {
+        MockitoAnnotations.openMocks(this)
+        repository = UserRepositoryImpl(localDataSource, remoteDataSource)
+    }
+    
+    @Test
+    fun `getUser returns cached user when cache is valid`() = runTest {
+        // Given
+        val userId = "123"
+        val cachedUser = User(id = userId, name = "Test")
+        whenever(localDataSource.getUser(userId)).thenReturn(cachedUser)
+        
+        // When
+        val result = repository.getUser(userId)
+        
+        // Then
+        assertEquals(cachedUser, result)
+        verify(remoteDataSource, never()).getUser(userId)
+    }
+}
+```
+
+---
+
+## XII. Code Quality Metrics
+
+### Enforce Quality Standards
+
+- **Function Complexity**: Max 15 (cyclomatic complexity)
+- **Function Length**: Max 50 lines
+- **Class Length**: Max 500 lines
+- **Parameters**: Max 4 parameters (use data class for more)
+- **Nesting**: Max 3 levels deep
+- **File Length**: Max 500 lines
+
+---
+
+## XIII. Documentation
+
+### Code Documentation
+
+**Rule**: Document public APIs, complex logic, and non-obvious code.
+
+```kotlin
+// ✅ GOOD - KDoc documentation
+/**
+ * Fetches user data from remote or local cache.
+ * 
+ * @param userId The unique identifier of the user
+ * @return Flow that emits [Result.Success] with user data or [Result.Error] on failure
+ * @throws IllegalArgumentException if userId is blank
+ */
+suspend fun getUser(userId: String): Flow<Result<User>> {
+    require(userId.isNotBlank()) { "User ID cannot be blank" }
+    // Implementation
+}
+```
+
+---
+
+## XIV. Security
+
+### Security Best Practices
+
+**Rule**: Follow security best practices for data handling and API communication.
+
+```kotlin
+// ❌ BAD - Sensitive data in logs
+Log.d("Tag", "User password: $password")
+
+// ✅ GOOD - Never log sensitive data
+Log.d("Tag", "User authentication attempted")
+
+// ❌ BAD - SQL injection risk
+fun getUser(query: String) {
+    val sql = "SELECT * FROM users WHERE name = '$query'"
+}
+
+// ✅ GOOD - Use parameterized queries
+fun getUser(query: String) {
+    val sql = "SELECT * FROM users WHERE name = ?"
+    // Use Room or parameterized query
+}
+```
+
+---
+
+## XV. Consistency with Existing Code
+
+### Follow Project Conventions
+
+**Rule**: Match existing code style, patterns, and architecture decisions.
+
+**Check**:
+- Naming conventions (camelCase, PascalCase)
+- Package structure
+- Existing design patterns
+- Error handling patterns
+- Logging patterns
+- Testing patterns
+
+**Before Adding New Code**:
+1. Search for similar functionality
+2. Check existing utility classes
+3. Review similar implementations
+4. Follow established patterns
+5. Maintain consistency
+
+---
+
+This comprehensive rule set ensures high-quality, maintainable, and professional Kotlin code following industry best practices.
+
+---
+
+## XVI. Layer-Specific Kotlin Rules (Data, Domain, Presentation)
+
+### Data Layer
+
+- Use `DTO` suffix for external models (e.g., `UserDTO`).
+- Keep all Cursor operations in dedicated `CursorSource` classes.
+- Always wrap Cursor queries with `.use {}` to avoid leaks.
+- Resolve columns with `getColumnIndexOrThrow()` and handle nulls explicitly.
+- Centralize DTO → Domain mapping in a single `Mapper` per aggregate; no mapping in UI or repositories.
+- Repositories implement Domain interfaces and return `Flow<T>` or `Result<T>`/Either.
+
+### Domain Layer
+
+- Domain models are pure Kotlin `data class`es and independent of external libraries.
+- Introduce single-responsibility UseCases. Naming: `GetXxxUseCase()`, `SaveXxxUseCase()`.
+- UseCases return `Flow<T>` or `Result<T>`/Either and contain business logic only.
+
+### Presentation Layer (ViewModel + Compose)
+
+- Manage state with `MutableStateFlow`/`StateFlow`; expose only immutable `StateFlow` to the UI.
+- Use `viewModelScope.launch` for coroutines and handle exceptions with `try/catch` inside the ViewModel.
+- Separate UI models (`Ui*` prefix) from Domain models; map Domain → UI via a mapper.
+- Compose: apply state hoisting, use `remember`/`derivedStateOf`, keep composables small, maintain consistent `Modifier` ordering, and use `LaunchedEffect(key)` for one-off side effects based on stable keys.
+
+### Pagination Guidance
+
+- Implement pagination at repository/data-source level; avoid loading entire tables.
+- Prefer `Flow`-based pagination (e.g., Paging3 `PagingData`) or explicit page params.

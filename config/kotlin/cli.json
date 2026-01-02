@@ -1,0 +1,240 @@
+{
+  "version": "1.0",
+  "description": "Cursor CLI configuration for AI-powered Kotlin code review with cursor-agent",
+  "agent": "cursor-agent",
+  "rules": ["./rules/review-rules.mdc"],
+  "mode": "review",
+  "settings": {
+    "review": {
+      "type": "code_review",
+      "auto_push": false,
+      "create_pull_request": false,
+      "commit_changes": false,
+      "focus_areas": [
+        "design_patterns",
+        "solid_principles",
+        "null_safety",
+        "error_handling",
+        "code_quality",
+        "testing",
+        "security",
+        "performance",
+        "concurrency",
+        "memory_management",
+        "resource_management",
+        "string_resources",
+        "dry_principles",
+        "architecture",
+        "code_structure",
+        "compose"
+      ],
+      "severity_levels": ["critical", "moderate", "minor"],
+      "output_format": "markdown",
+      "include_suggestions": true,
+      "include_grading": true,
+      "include_code_examples": true,
+      "include_metrics_table": true
+    },
+    "analysis": {
+      "max_method_complexity": 15,
+      "max_method_lines": 50,
+      "max_class_lines": 500,
+      "check_unused_imports": true,
+      "check_wildcard_imports": true,
+      "check_thread_safety": true,
+      "check_defensive_copying": true,
+      "validate_design_patterns": true,
+      "validate_solid_principles": true,
+      "check_null_safety": true,
+      "check_resource_leaks": true,
+      "check_exception_handling": true,
+      "validate_logging": true,
+      "check_hardcoded_strings": true,
+      "check_dry_violations": true,
+      "check_code_duplication": true,
+      "validate_architecture_layers": true
+    },
+    "kotlin": {
+      "version": "1.9",
+      "enforce_null_safety": true,
+      "check_smart_casts": true,
+      "validate_data_classes": true,
+      "check_sealed_classes": true,
+      "validate_inline_functions": true,
+      "check_extension_functions": true,
+      "validate_coroutines": true,
+      "check_flow_usage": true,
+      "validate_suspend_functions": true,
+      "check_scope_functions": true,
+      "validate_delegation": true,
+      "check_type_aliases": true,
+      "validate_generics": true,
+      "check_destructuring": true,
+      "validate_lambda_expressions": true,
+      "validate_result_usage": true,
+      "validate_arrow_either": true
+    },
+    "android": {
+      "check_string_resources": true,
+      "validate_view_binding": true,
+      "check_lifecycle_awareness": true,
+      "validate_viewmodel": true,
+      "check_livedata_flow": true,
+      "validate_repository_pattern": true,
+      "check_dependency_injection": true,
+      "validate_room_database": true,
+      "check_permissions": true,
+      "validate_manifest": true,
+      "validate_compose": true,
+      "check_state_hoisting": true,
+      "check_remember_usage": true,
+      "check_launched_effect": true,
+      "check_modifier_order": true
+    },
+    "coroutines": {
+      "check_scope_usage": true,
+      "validate_dispatchers": true,
+      "check_cancellation": true,
+      "validate_supervisor_job": true,
+      "check_flow_operators": true,
+      "validate_exception_handling": true,
+      "check_memory_leaks": true,
+      "validate_context_preservation": true
+    },
+    "concurrency": {
+      "check_thread_safety": true,
+      "validate_synchronization": true,
+      "check_race_conditions": true,
+      "validate_concurrent_collections": true,
+      "check_atomic_operations": true,
+      "validate_mutex_usage": true
+    },
+    "memory": {
+      "check_leaks": true,
+      "validate_resource_cleanup": true,
+      "check_circular_references": true,
+      "validate_weak_references": true,
+      "check_lazy_initialization": true,
+      "validate_object_pooling": true
+    },
+    "security": {
+      "check_sql_injection": true,
+      "validate_input_sanitization": true,
+      "check_authentication": true,
+      "check_authorization": true,
+      "validate_crypto_usage": true,
+      "check_sensitive_data_exposure": true,
+      "validate_certificate_pinning": true,
+      "check_proguard_rules": true
+    },
+    "performance": {
+      "check_unnecessary_allocations": true,
+      "validate_collection_usage": true,
+      "check_string_concatenation": true,
+      "validate_caching": true,
+      "check_lazy_loading": true,
+      "validate_database_queries": true,
+      "check_bitmap_handling": true,
+      "validate_pagination": true
+    },
+    "testing": {
+      "validate_junit_usage": true,
+      "check_test_coverage": true,
+      "validate_mockito_usage": true,
+      "check_test_naming": true,
+      "validate_assertions": true,
+      "check_test_isolation": true,
+      "validate_coroutine_testing": true
+    },
+    "architecture": {
+      "validate_clean_architecture": true,
+      "check_layer_separation": true,
+      "validate_dependency_rule": true,
+      "check_module_boundaries": true,
+      "validate_feature_modules": true,
+      "check_presentation_layer": true,
+      "validate_domain_layer": true,
+      "check_data_layer": true
+    },
+    "code_quality": {
+      "check_hardcoded_strings": true,
+      "check_code_duplication": true,
+      "validate_naming_conventions": true,
+      "check_unused_code": true,
+      "validate_documentation": true,
+      "check_complexity": true,
+      "validate_consistency": true,
+      "check_unwanted_logs": true
+    },
+    "output": {
+      "verbose": true,
+      "show_file_paths": true,
+      "group_by_severity": true,
+      "include_line_numbers": true,
+      "include_context": true,
+      "show_fixes": true
+    },
+    "ai": {
+      "model": "claude-sonnet-4.5",
+      "temperature": 0.2,
+      "max_tokens": 8000,
+      "stream": false,
+      "context_window": 100000
+    }
+  },
+  "exclusions": {
+    "file_patterns": [
+      "*.class",
+      "*.jar",
+      "*.aar",
+      "*.apk",
+      "*.dex",
+      "build/**",
+      ".gradle/**",
+      ".idea/**",
+      "*.iml",
+      "*.ipr",
+      "*.iws",
+      ".settings/**",
+      ".classpath",
+      ".project",
+      "*.log",
+      "*.tmp",
+      "**/generated/**",
+      "**/gen/**",
+      "**/R.java",
+      "**/BuildConfig.java"
+    ],
+    "directories": [
+      "build",
+      ".gradle",
+      ".idea",
+      ".settings",
+      ".git",
+      "node_modules",
+      "coverage",
+      "out",
+      "bin",
+      "app/build",
+      "buildSrc/build"
+    ]
+  },
+  "integrations": {
+    "gitlab": {
+      "enabled": true,
+      "post_comments": true,
+      "create_issues": false,
+      "auto_approve": false,
+      "block_on_critical": true
+    },
+    "sonarqube": {
+      "enabled": false
+    },
+    "gradle": {
+      "enabled": true,
+      "validate_build_gradle": true,
+      "check_dependencies": true
+    }
+  }
+}
+

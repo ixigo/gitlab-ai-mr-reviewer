@@ -1,0 +1,74 @@
+---
+description: code-review
+globs: 
+alwaysApply: false
+---
+# Code Review Guidelines
+
+As an expert Java, Reactive Programming, and Spring Boot developer with a focus on high code quality, I will rigorously review code based on the following:
+
+---
+
+## I. Core Principles & Standards
+
+* **Adherence to Guidelines:** Strict compliance with [@design-principles.mdc]() and [@java-rules.mdc]().
+* **Design & Architecture:**
+    * **Design Patterns:** Evaluate appropriate and effective use.
+    * **SOLID Principles:** Assess adherence and identify violations.
+* **Concurrency & Thread Safety:**
+    * Thoroughly check for **concurrency safety concerns**.
+    * Identify **mutable object designs** and **missing defensive copying**.
+* **Error Handling:** Evaluate robustness and completeness.
+
+---
+
+## II. Code Quality & Maintainability
+
+* **Imports:** Prohibit **unused** and **widespread wildcard imports**.
+* **Method Complexity:** Method **cognitive complexity** should be **less than 15**.
+* **Method Signatures:** Flag overly **complex method signatures**.
+* **Logging:** Ensure **consistent** and appropriate logging practices.
+* **Documentation:** Review for clarity, completeness, and enhancement opportunities.
+
+---
+
+## III. Testing
+
+* **Test Coverage:** Identify significant **gaps in test coverage**.
+
+---
+
+## IV. Reactive Programming (if applicable)
+
+* **Publisher Management:** Validate proper use of Mono/Flux and Publisher types
+    * Check for appropriate use of Mono vs Flux
+    * Ensure proper publisher creation patterns
+    * Validate transformation operators usage
+* **Blocking Calls:** Identify blocking operations in reactive chains
+    * Flag `.block()` and `.blockFirst()` calls
+    * Detect synchronous I/O operations
+    * Identify JDBC or blocking HTTP client usage in reactive flows
+* **Error Handling:** Check proper error handling in reactive streams
+    * Validate use of `onErrorResume`, `onErrorReturn`, `onErrorContinue`
+    * Check for proper error propagation
+    * Ensure errors don't break the reactive chain
+* **Backpressure:** Validate backpressure strategies
+    * Check for proper use of `onBackpressureBuffer`, `onBackpressureDrop`, `onBackpressureLatest`
+    * Identify potential unbounded buffers
+    * Validate request(n) patterns
+* **Schedulers:** Review scheduler usage and thread management
+    * Validate appropriate scheduler selection (boundedElastic, parallel, single)
+    * Check for proper `subscribeOn` and `publishOn` placement
+    * Identify scheduler leaks and improper cleanup
+* **Subscription Management:** Check for subscription leaks
+    * Validate proper use of `Disposable`
+    * Check for missing `.subscribe()` calls
+    * Ensure subscriptions are disposed properly in components
+* **Hot vs Cold Publishers:** Verify appropriate publisher types
+    * Validate use of cold publishers for lazy evaluation
+    * Check proper use of hot publishers with `.share()` or `.cache()`
+    * Identify unnecessary hot publisher conversions
+* **Context Propagation:** Ensure proper context handling
+    * Validate MDC/Logging context propagation
+    * Check for proper use of Reactor Context
+    * Verify security context propagation in reactive flows

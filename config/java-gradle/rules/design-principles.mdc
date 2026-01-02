@@ -1,0 +1,546 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Design Principles and Patterns
+
+
+## Design Principles
+
+These principles guide the application of design patterns:
+
+1. **Favor composition over inheritance**  
+   - Encapsulate behaviors using composition (e.g., Strategy Pattern).  
+   - Example: Use `QuackBehavior` interfaces instead of inheriting from `Duck`.
+
+2. **Program to an interface, not an implementation**  
+   - Use interfaces or abstract classes for flexibility.  
+   - Example: Declare `List` instead of `ArrayList`.
+
+3. **Encapsulate what varies**  
+   - Isolate changing code in separate classes or methods.  
+   - Example: Encapsulate quack behavior in `QuackBehavior`.
+
+4. **SOLID Principles**  
+   - **Single Responsibility**: One class, one responsibility.  
+   - **Open/Closed**: Open for extension, closed for modification.  
+   - **Liskov Substitution**: Subtypes must be substitutable for base types.  
+   - **Interface Segregation**: Clients should not depend on unused interfaces.  
+   - **Dependency Inversion**: Depend on abstractions.
+
+5. **Strive for loosely coupled designs**  
+   - Minimize dependencies for flexibility.  
+   - Example: Use Observer Pattern to decouple subjects from observers.
+
+## Design Patterns
+
+The following patterns are based on the repository's chapters, with code snippets reflecting its Java examples.
+
+### 1. Strategy Pattern
+
+- **Description**: Encapsulates interchangeable behaviors, allowing runtime changes.  
+- **Guidance**: Suggest interfaces for behaviors (e.g., quack, fly) with multiple implementations.  
+- **Example**: `Duck` delegates to `QuackBehavior` and `FlyBehavior`.  
+- **Code Snippet**:
+
+```java
+public interface QuackBehavior {
+    String quack();
+}
+
+public class Quack implements QuackBehavior {
+    public String quack() { return "Quack"; }
+}
+
+public abstract class Duck {
+    QuackBehavior quackBehavior;
+    public void setQuackBehavior(QuackBehavior qb) { this.quackBehavior = qb; }
+    public String performQuack() { return quackBehavior.quack(); }
+}
+```
+
+### 2. Observer Pattern
+
+- **Description**: Manages one-to-many dependencies with automatic updates when state changes.  
+- **Guidance**: Suggest Subject interface with registerObserver, removeObserver, notifyObservers.  
+- **Example**: WeatherData notifies CurrentConditionsDisplay.  
+- **Code Snippet**:
+
+```java
+public interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+
+public interface Observer {
+    void update(float temp, float humidity, float pressure);
+}
+
+public class WeatherData implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private float temperature;
+    
+    public void registerObserver(Observer o) { observers.add(o); }
+    public void removeObserver(Observer o) { observers.remove(o); }
+    
+    public void notifyObservers() {
+        for (Observer o : observers) {
+            o.update(temperature, humidity, pressure);
+        }
+    }
+    
+    public void setMeasurements(float temp, float humidity, float pressure) {
+        this.temperature = temp;
+        notifyObservers();
+    }
+}
+```
+
+### 3. Decorator Pattern
+
+- **Description**: Extends behavior dynamically by wrapping objects.  
+- **Guidance**: Suggest wrapping objects; avoid complex hierarchies.  
+- **Example**: Beverage with decorators like Mocha, Whip.  
+- **Code Snippet**:
+
+```java
+public abstract class Beverage {
+    String description = "Unknown Beverage";
+    public String getDescription() { return description; }
+    public abstract double cost();
+}
+
+public abstract class CondimentDecorator extends Beverage {
+    public abstract String getDescription();
+}
+
+public class Mocha extends CondimentDecorator {
+    Beverage beverage;
+    
+    public Mocha(Beverage beverage) { this.beverage = beverage; }
+    public String getDescription() { return beverage.getDescription() + ", Mocha"; }
+    public double cost() { return beverage.cost() + 0.20; }
+}
+```
+
+### 4. Factory Patterns
+
+- **Description**: Delegates object creation to subclasses (Factory Method) or creates families of objects (Abstract Factory).  
+- **Guidance**: Use Factory Method for single objects, Abstract Factory for related objects.  
+- **Example**: PizzaStore with NYStylePizzaFactory.  
+- **Code Snippet**:
+```java
+public abstract class PizzaStore {
+    public Pizza orderPizza(String type) {
+        Pizza pizza = createPizza(type);
+        pizza.prepare();
+        pizza.bake();
+        return pizza;
+    }
+    protected abstract Pizza createPizza(String type);
+}
+
+public class NYPizzaStore extends PizzaStore {
+    protected Pizza createPizza(String type) {
+        if (type.equals("cheese")) {
+            return new NYStyleCheesePizza();
+        }
+        return null;
+    }
+}
+
+public class NYStyleCheesePizza extends Pizza {
+    public NYStyleCheesePizza() { name = "NY Style Cheese Pizza"; }
+}
+```
+
+### 5. Singleton Pattern
+
+- **Description**: Ensures one instance with global access.  
+- **Guidance**: Suggest thread-safe implementations (e.g., eager initialization).  
+- **Example**: ChocolateBoiler with getInstance.  
+- **Code Snippet**:
+
+```java
+public class ChocolateBoiler {
+    private static ChocolateBoiler instance;
+    
+    private ChocolateBoiler() {}
+    
+    public static synchronized ChocolateBoiler getInstance() {
+        if (instance == null) {
+            instance = new ChocolateBoiler();
+        }
+        return instance;
+    }
+    
+    public void fill() { /* Fill boiler */ }
+}
+```
+
+### 6. Command Pattern
+
+- **Description**: Encapsulates requests as objects, supporting undo and queuing.  
+- **Guidance**: Suggest Command interface with execute and undo.  
+- **Example**: LightOnCommand controls Light.  
+- **Code Snippet**:
+
+```java
+public interface Command {
+    void execute();
+    void undo();
+}
+
+public class LightOnCommand implements Command {
+    Light light;
+    
+    public LightOnCommand(Light light) { this.light = light; }
+    public void execute() { light.on(); }
+    public void undo() { light.off(); }
+}
+
+public class Light {
+    public void on() { /* Turn on light */ }
+    public void off() { /* Turn off light */ }
+}
+```
+
+### 7. Adapter Pattern
+
+- **Description**: Converts one interface to another for compatibility.  
+- **Guidance**: Suggest Adapter classes wrapping adaptees.  
+- **Example**: TurkeyAdapter adapts Turkey to Duck.  
+- **Code Snippet**:
+
+```java
+public interface Duck {
+    void quack();
+    void fly();
+}
+
+public interface Turkey {
+    void gobble();
+    void fly();
+}
+
+public class TurkeyAdapter implements Duck {
+    Turkey turkey;
+    
+    public TurkeyAdapter(Turkey turkey) { this.turkey = turkey; }
+    public void quack() { turkey.gobble(); }
+    public void fly() { turkey.fly(); }
+}
+```
+
+### 8. Facade Pattern
+
+- **Description**: Simplifies complex subsystems with a unified interface.  
+- **Guidance**: Suggest Facade classes orchestrating subsystem calls.  
+- **Example**: HomeTheaterFacade simplifies Amplifier, DvdPlayer.  
+- **Code Snippet**:
+
+```java
+public class HomeTheaterFacade {
+    Amplifier amp;
+    DvdPlayer dvd;
+    
+    public HomeTheaterFacade(Amplifier amp, DvdPlayer dvd) {
+        this.amp = amp;
+        this.dvd = dvd;
+    }
+    
+    public void watchMovie(String movie) {
+        amp.on();
+        dvd.play(movie);
+    }
+    
+    public void endMovie() {
+        amp.off();
+        dvd.stop();
+    }
+}
+```
+
+### 9. Template Method Pattern
+
+- **Description**: Defines an algorithm skeleton with customizable steps.  
+- **Guidance**: Suggest abstract classes with final template methods.  
+- **Example**: CaffeineBeverage with prepareRecipe.  
+- **Code Snippet**:
+
+```java
+public abstract class CaffeineBeverage {
+    final void prepareRecipe() {
+        boilWater();
+        brew();
+        pourInCup();
+        addCondiments();
+    }
+    
+    abstract void brew();
+    abstract void addCondiments();
+    
+    void boilWater() { /* Boil water */ }
+    void pourInCup() { /* Pour in cup */ }
+}
+
+public class Coffee extends CaffeineBeverage {
+    void brew() { /* Brew coffee */ }
+    void addCondiments() { /* Add sugar and milk */ }
+}
+```
+
+### 10. Iterator Pattern
+
+- **Description**: Provides sequential access to collections without exposing structure.  
+- **Guidance**: Suggest Iterator interface with hasNext and next.  
+- **Example**: DinerMenuIterator for MenuItem array.  
+- **Code Snippet**:
+
+```java
+public interface Iterator {
+    boolean hasNext();
+    Object next();
+}
+
+public class DinerMenuIterator implements Iterator {
+    MenuItem[] items;
+    int position = 0;
+    
+    public DinerMenuIterator(MenuItem[] items) { this.items = items; }
+    
+    public boolean hasNext() { 
+        return position < items.length && items[position] != null; 
+    }
+    
+    public Object next() { 
+        return items[position++]; 
+    }
+}
+```
+
+### 11. Composite Pattern
+
+- **Description**: Treats individual objects and compositions uniformly.  
+- **Guidance**: Suggest Component interface with add, remove, getChild.  
+- **Example**: MenuComponent for menus and items.  
+- **Code Snippet**:
+
+```java
+public abstract class MenuComponent {
+    public void add(MenuComponent component) { 
+        throw new UnsupportedOperationException(); 
+    }
+    
+    public void remove(MenuComponent component) { 
+        throw new UnsupportedOperationException(); 
+    }
+    
+    public MenuComponent getChild(int i) { 
+        throw new UnsupportedOperationException(); 
+    }
+    
+    public void print() { 
+        throw new UnsupportedOperationException(); 
+    }
+}
+
+public class Menu extends MenuComponent {
+    List<MenuComponent> components = new ArrayList<>();
+    String name;
+    
+    public Menu(String name) { this.name = name; }
+    
+    public void add(MenuComponent component) { 
+        components.add(component); 
+    }
+    
+    public void print() {
+        System.out.println(name);
+        for (MenuComponent component : components) {
+            component.print();
+        }
+    }
+}
+```
+
+### 12. State Pattern
+
+- **Description**: Changes object behavior based on state.  
+- **Guidance**: Suggest State interface with state-specific methods.  
+- **Example**: GumballMachine with SoldState, NoQuarterState.  
+- **Code Snippet**:
+
+```java
+public interface State {
+    void insertQuarter();
+    void dispense();
+}
+
+public class GumballMachine {
+    State noQuarterState;
+    State state;
+    int count;
+    
+    public GumballMachine(int count) {
+        this.noQuarterState = new NoQuarterState(this);
+        this.state = noQuarterState;
+        this.count = count;
+    }
+    
+    public void setState(State state) { this.state = state; }
+    public void insertQuarter() { state.insertQuarter(); }
+    public void dispense() { state.dispense(); }
+}
+
+public class NoQuarterState implements State {
+    GumballMachine machine;
+    
+    public NoQuarterState(GumballMachine machine) { 
+        this.machine = machine; 
+    }
+    
+    public void insertQuarter() { 
+        machine.setState(machine.getHasQuarterState()); 
+    }
+    
+    public void dispense() { /* Do nothing */ }
+}
+```
+
+### 13. Proxy Pattern
+
+- **Description**: Controls access to objects (e.g., for remote access, lazy loading).  
+- **Guidance**: Suggest Proxy classes implementing the same interface as the subject.  
+- **Example**: GumballMachineProxy for GumballMachine.  
+- **Code Snippet**:
+
+```java
+public interface GumballMachineRemote {
+    int getCount();
+    String getState();
+}
+
+public class GumballMachineProxy implements GumballMachineRemote {
+    GumballMachine machine;
+    
+    public GumballMachineProxy(GumballMachine machine) { 
+        this.machine = machine; 
+    }
+    
+    public int getCount() { 
+        return machine.getCount(); 
+    }
+    
+    public String getState() { 
+        return machine.getState().toString(); 
+    }
+}
+```
+
+### 14. Compound Patterns
+
+- **Description**: Combines patterns (e.g., MVC uses Observer, Composite, Strategy).  
+- **Guidance**: Suggest MVC with Model (data), View (UI), Controller (logic).  
+- **Example**: DJView combines Observer and Strategy.  
+- **Code Snippet**:
+
+```java
+public interface BeatModelInterface {
+    void registerObserver(BeatObserver o);
+    void notifyBeatObservers();
+    void setBPM(int bpm);
+}
+
+public class BeatModel implements BeatModelInterface {
+    List<BeatObserver> beatObservers = new ArrayList<>();
+    int bpm;
+    
+    public void registerObserver(BeatObserver o) { 
+        beatObservers.add(o); 
+    }
+    
+    public void notifyBeatObservers() {
+        for (BeatObserver o : beatObservers) {
+            o.updateBeat();
+        }
+    }
+    
+    public void setBPM(int bpm) { 
+        this.bpm = bpm; 
+        notifyBeatObservers(); 
+    }
+}
+
+public interface BeatObserver {
+    void updateBeat();
+}
+```
+
+## Code Style
+
+- Use explicit access modifiers (public, private, protected) for all class members.
+- Avoid concrete class references; use interfaces or abstract types.
+- Include Javadoc comments for public classes, methods, and interfaces, summarizing purpose and pattern.
+- **Example Javadoc**:
+```java
+/**
+ * Represents a weather data subject in the Observer Pattern.
+ * Notifies registered observers when measurements change.
+ */
+```
+
+- Keep methods small and focused, ideally under 20 lines.
+- Use descriptive variable names reflecting domain concepts (e.g., observerList instead of list).
+- Avoid using wildcard imports, prefer single class imports
+
+
+## Autocompletion and Suggestions
+
+- Suggest relevant design patterns based on context (e.g., Observer for event systems, Decorator for extensible behaviors).
+- Recommend factory methods or abstract factories over direct instantiation.
+- Highlight violations of design principles (e.g., tight coupling, inheritance overuse) with warnings.
+- Suggest iterators for collections to hide internal structure.
+- For MVC, ensure clear separation of Model, View, and Controller.
+
+## Error Handling
+
+- Use checked exceptions for recoverable conditions (e.g., IOException in I/O operations).
+- Avoid empty catch blocks; log or handle exceptions meaningfully.
+- Suggest null object patterns (e.g., NoCommand) to reduce null checks.
+
+## Testing
+
+- Encourage unit tests for each class, especially for behavior variations in patterns like Strategy, State, or Decorator.
+- Suggest JUnit 5 for test frameworks.
+- **Example Test**:
+
+```java
+@Test
+void testObserverUpdate() {
+    WeatherData weatherData = new WeatherData();
+    CurrentConditionsDisplay display = new CurrentConditionsDisplay(weatherData);
+    weatherData.setMeasurements(80, 65, 30.4f);
+    assertEquals(80, display.getTemperature());
+}
+```
+
+## Additional Notes
+
+- Include comments in generated code referencing the design pattern used.
+- **Example**:
+
+```java
+// Observer Pattern: Subject notifies observers of state changes
+public interface Subject {
+    void registerObserver(Observer o);
+    void removeObserver(Observer o);
+    void notifyObservers();
+}
+```
+
+- For ambiguous queries, suggest patterns.
+- If unsure about a pattern's applicability, explain trade-offs (e.g., Decorator's flexibility vs. complexity).
+- For MVC, ensure Model is independent of View and Controller.

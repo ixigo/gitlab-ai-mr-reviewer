@@ -1,0 +1,90 @@
+---
+description: Kotlin code review guidelines (Data, Domain, Presentation, Coroutines, Quality)
+globs: ["**/*.kt", "**/*.kts"]
+alwaysApply: true
+---
+
+# Kotlin Code Review Guidelines
+
+Review Kotlin code against these non-negotiable standards. Apply consistently across Data, Domain, and Presentation layers.
+
+## Critical Checks
+
+- **No hard-coded user-facing strings**: Use Android string resources or centralized constants; never inline in UI or ViewModel logic.
+- **Null safety**: Avoid `!!`. Prefer safe calls, `?:`, early returns, or sealed Result types.
+- **Coroutine correctness**: Structured concurrency, correct dispatchers, cancellation-aware, no `GlobalScope`.
+- **Layer boundaries**: Domain is pure and independent; Data exposes interfaces in Domain; Presentation depends only on Domain.
+- **Error handling**: Use `Result`/Either and sealed error types; no swallowed exceptions.
+- **DRY and clarity**: Extract duplication; favor small, single-purpose functions.
+- **Security**: No sensitive data in logs; parameterize SQL; validate inputs.
+
+## Data Layer Rules
+
+- **DTO naming**: External models end with `DTO` (e.g., `UserDTO`).
+- **Immutability**: Use `data class` for DTOs; prefer `val`.
+- **Cursor access**: Keep all Cursor ops in `CursorSource` classes; use `.use {}` for every query; resolve columns with `getColumnIndexOrThrow()`; handle nulls defensively.
+- **Mapping**: Centralize DTO → Domain mapping in a dedicated `Mapper` class per aggregate. No mapping in repositories or UI.
+- **Repositories**: Implement interfaces from Domain. Return `Flow<T>` or `Result<T>`/Either; never return raw Cursor or DTOs to Domain.
+- **Separation**: Split `RemoteDataSource`, `LocalDataSource`, `CursorSource`. Repositories orchestrate, not perform IO details.
+
+## Domain Layer Rules
+
+- **Purity**: No Android, database, or network dependencies. Pure Kotlin only.
+- **Models**: Use `data class` for domain entities. Independent of DTOs.
+- **UseCases**: One responsibility each. Naming: `GetThingUseCase`, `SaveThingUseCase`. Return `Flow<T>` or `Result<T>`/Either.
+- **Contracts**: Repository interfaces live in Domain and use Domain models.
+
+## Presentation Layer Rules (ViewModel + Compose)
+
+- **State**: Use `MutableStateFlow`/`StateFlow` for state. Expose immutable `StateFlow`.
+- **Concurrency**: Launch with `viewModelScope`; catch exceptions in ViewModel; convert to UI state.
+- **UI Models**: Define separate `Ui*` models (e.g., `UiUser`) containing only fields needed by UI. Map Domain → UI in a mapper.
+- **Compose**: Use `remember`/`derivedStateOf`; hoist state; prefer small composables; consistent `Modifier` order; use `LaunchedEffect(key)` for side-effects keyed to stable inputs; avoid recomposition traps (stable params and keys).
+- **Strings**: Resolve strings in UI via resources or centralized constants; no hard-coded strings.
+
+## Coroutines & Flow
+
+- **Dispatchers**: CPU → `Default`, IO → `IO`, UI → `Main`. Use `withContext` appropriately.
+- **Scope**: No `GlobalScope`. Prefer `viewModelScope`, lifecycle-aware scopes.
+- **Exceptions**: Use `CoroutineExceptionHandler` only at boundaries; prefer try/catch at suspend call sites.
+- **Flow**: Use `catch`, `onCompletion`, `buffer` if needed; `flowOn(Dispatchers.IO)` for upstream IO.
+- **Cancellation**: Ensure cleanup in `finally` or `invokeOnCompletion`.
+
+## Pagination
+
+- **Large datasets**: Implement repository-level pagination; expose `Flow<PagingData<T>>` (if using Paging) or batched `Flow<List<T>>` with request params; avoid loading all rows into memory; ensure backpressure.
+
+## Error Handling
+
+- **Result/Either**: Repositories and UseCases return typed results. Represent errors with sealed classes.
+- **User messaging**: Map errors to UI-friendly text centrally; do not leak technical messages to UI.
+
+## Performance & Quality
+
+- **Collections**: Avoid unnecessary copies; chain operations; prefer immutable views.
+- **Allocations**: Avoid repeated allocations in hot paths; use `joinToString`, not `+` in loops.
+- **Metrics**: Function complexity ≤ 15; function length ≤ 50 lines; ≤ 4 parameters (or introduce a parameter object).
+
+## Logging
+
+- **No unwanted logs**: Remove debug/temporary logs; no noisy logs in hot paths; never log sensitive data; prefer structured logs.
+
+## Security
+
+- **Logging**: Never log secrets. Use structured logs without PII.
+- **SQL**: Use parameterized queries/Room; no string concatenation.
+- **Network**: Validate cert pinning where applicable; safe crypto defaults.
+
+## Review Checklist
+
+1. Strings externalized and localized; no UI hard-coded text.
+2. Domain independent; DTOs do not leak into Domain.
+3. Repository returns `Flow`/`Result`; mapping centralized.
+4. Cursor usage confined to `CursorSource` with `.use {}` and `getColumnIndexOrThrow()`.
+5. UseCases are single-purpose and correctly named.
+6. ViewModel uses `StateFlow`; exceptions handled; emits stable UI state.
+7. Compose follows state hoisting, `remember`, stable params, consistent `Modifier`.
+8. Coroutines use correct dispatcher; structured concurrency; proper cancellation.
+9. Tests exist for UseCases/Repositories; coroutine tests use proper TestDispatcher; mock Cursor data where relevant.
+10. No DRY violations, no dead code, no wildcard imports, no unused imports.
+

@@ -1,0 +1,137 @@
+---
+description: code-review
+globs:
+alwaysApply: false
+---
+
+# Code Review Guidelines
+
+As an expert TypeScript, Next.js, and React developer with a focus on high code quality, I will rigorously review code based on the following:
+
+---
+
+## I. Core Principles & Standards
+
+- **Adherence to Guidelines:** Strict compliance with [@design-principles.mdc]() and [@typescript-rules.mdc]().
+- **Design & Architecture:**
+  - **Design Patterns:** Evaluate appropriate and effective use (Strategy, Observer, Factory, Composite, etc.).
+  - **SOLID Principles:** Assess adherence and identify violations.
+  - **React Patterns:** Review proper use of hooks, component composition, and state management.
+- **Type Safety:**
+  - Thoroughly check for **type safety** concerns and proper use of TypeScript.
+  - Identify **inappropriate use of `any`**, missing type guards, and weak type definitions.
+  - Ensure **immutability** where appropriate (readonly, const assertions).
+  - Flag **missing defensive programming** practices.
+- **Error Handling:** Evaluate robustness and completeness (try/catch, error boundaries, Result types).
+- **Async Operations:** Review proper handling of promises, async/await, and race conditions.
+
+---
+
+## II. Code Quality & Maintainability
+
+- **Imports:** Prohibit **unused imports**, **wildcard imports**, and **circular dependencies**.
+- **Function Complexity:** Function **cognitive complexity** should be **less than 15**.
+- **Function Signatures:** Flag overly **complex function signatures** (>4 parameters without options object).
+- **Component Design:**
+  - Components should be **small and focused** (ideally < 200 lines).
+  - Proper **separation of concerns** (presentational vs container components).
+  - Appropriate use of **hooks** (no violations of Rules of Hooks).
+- **Logging:** Ensure **consistent** and appropriate logging practices (client vs server logging).
+- **Documentation:** Review for clarity, completeness, and enhancement opportunities (TSDoc comments).
+- **Performance:**
+  - Check for **unnecessary re-renders** (missing memoization, dependency arrays).
+  - Identify **expensive operations** without optimization.
+  - Flag **memory leaks** (missing cleanup in useEffect, event listeners).
+
+---
+
+## III. Next.js & React Specific
+
+- **Server vs Client Components:** Ensure proper use of Server and Client Components (Next.js 13+).
+- **Data Fetching:** Review appropriate use of server-side data fetching (getServerSideProps, server components).
+- **API Routes:** Evaluate API route design, error handling, and security.
+- **Performance:**
+  - Check for proper **code splitting** and **lazy loading**.
+  - Evaluate **image optimization** (next/image usage).
+  - Review **bundle size** implications.
+- **SEO:** Verify proper metadata, structured data, and accessibility.
+
+---
+
+## IV. Testing
+
+- **Test Coverage:** Identify significant **gaps in test coverage**.
+- **Test Quality:**
+  - Tests should verify **behavior**, not implementation details.
+  - Proper use of **testing library patterns** (React Testing Library, Jest).
+  - Check for **missing edge cases** and **error scenarios**.
+  - Verify **mock quality** and appropriate use of test doubles.
+
+---
+
+## V. Security & Best Practices
+
+- **Security Concerns:**
+  - Check for **XSS vulnerabilities** (dangerouslySetInnerHTML, unsanitized input).
+  - Verify **proper authentication/authorization** checks.
+  - Review **API security** (input validation, rate limiting).
+  - Flag **sensitive data exposure** (console.logs, error messages).
+- **Accessibility:**
+  - Ensure **ARIA attributes** are properly used.
+  - Verify **keyboard navigation** support.
+  - Check for **semantic HTML** usage.
+
+---
+
+## VI. Review Checklist
+
+### TypeScript
+
+- [ ] No use of `any` without justification
+- [ ] Proper type guards for runtime checks
+- [ ] Appropriate use of `unknown` over `any`
+- [ ] No type assertions without validation
+- [ ] Proper generic constraints
+- [ ] Readonly where immutability is required
+
+### React/Next.js
+
+- [ ] No violations of Rules of Hooks
+- [ ] Proper dependency arrays in useEffect/useMemo/useCallback
+- [ ] No missing cleanup in useEffect
+- [ ] Appropriate Server vs Client component usage
+- [ ] Proper error boundaries
+- [ ] Memoization where beneficial
+
+### Code Quality
+
+- [ ] Functions < 15 cognitive complexity
+- [ ] Components < 200 lines
+- [ ] No unused imports or variables
+- [ ] Consistent naming conventions
+- [ ] Self-documenting code
+- [ ] TSDoc for public APIs
+
+### Performance
+
+- [ ] No unnecessary re-renders
+- [ ] Proper code splitting
+- [ ] Optimized images (next/image)
+- [ ] Lazy loading where appropriate
+- [ ] Appropriate data structures
+
+### Testing
+
+- [ ] Critical paths are tested
+- [ ] Edge cases are covered
+- [ ] Error scenarios are tested
+- [ ] Proper use of testing utilities
+- [ ] No implementation detail tests
+
+### Security
+
+- [ ] Input validation
+- [ ] No XSS vulnerabilities
+- [ ] Proper authentication checks
+- [ ] No sensitive data exposure
+- [ ] API security measures

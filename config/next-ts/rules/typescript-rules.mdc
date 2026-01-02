@@ -1,0 +1,1035 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# TypeScript Development Rules and Guidelines
+
+## Core TypeScript Principles
+
+### Type System Best Practices
+
+#### 1. Prefer type inference where possible, explicit types where clarity is needed
+
+- Let TypeScript infer types when they're obvious from the context
+- Use explicit types for function parameters, return types, and public APIs
+- Avoid redundant type annotations that don't add value
+
+```typescript
+// Good - inference
+const numbers = [1, 2, 3]; // TypeScript infers number[]
+const doubled = numbers.map((n) => n * 2); // infers number[]
+
+// Good - explicit for clarity
+function calculateTotal(items: Item[]): number {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+// Bad - redundant
+const count: number = 5; // unnecessary annotation
+```
+
+#### 2. Use `interface` for object shapes, `type` for unions/intersections
+
+- Interfaces can be extended and merged
+- Types are more flexible for complex type operations
+- Interfaces are better for public APIs
+
+```typescript
+// Good - interface for object shapes
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// Good - type for unions and complex types
+type Result<T> = Success<T> | Failure;
+type Nullable<T> = T | null;
+
+// Good - interface extension
+interface AdminUser extends User {
+  permissions: string[];
+}
+```
+
+#### 3. Avoid `any`, prefer `unknown` for truly unknown types
+
+- `any` disables type checking completely
+- `unknown` requires type narrowing before use
+- Use `never` for values that should never exist
+
+```typescript
+// Bad
+function processData(data: any) {
+  return data.value; // No type safety
+}
+
+// Good
+function processData(data: unknown) {
+  if (typeof data === 'object' && data !== null && 'value' in data) {
+    return (data as {value: string}).value;
+  }
+  throw new Error('Invalid data');
+}
+```
+
+#### 4. Use strict TypeScript configuration
+
+- Enable `strict: true` in tsconfig.json
+- Include `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`
+- Use `noUnusedLocals` and `noUnusedParameters`
+
+#### 5. Prefer `readonly` for immutability
+
+- Mark properties as `readonly` when they shouldn't change
+- Use `ReadonlyArray<T>` or `readonly T[]` for immutable arrays
+- Consider `as const` for literal types
+
+```typescript
+// Good - readonly properties
+interface Config {
+  readonly apiUrl: string;
+  readonly timeout: number;
+}
+
+// Good - readonly array
+function processItems(items: readonly Item[]): void {
+  // items.push() would be a compile error
+  items.forEach((item) => console.log(item));
+}
+
+// Good - const assertions
+const ROUTES = {
+  home: '/home',
+  about: '/about',
+} as const;
+```
+
+### Functions and Methods
+
+#### 6. Prefer arrow functions for closures, regular functions for methods
+
+- Arrow functions capture `this` from the surrounding context
+- Regular functions have their own `this` binding
+- Use arrow functions for callbacks and functional programming
+
+```typescript
+// Good - arrow function for callback
+const doubled = numbers.map((n) => n * 2);
+
+// Good - method syntax for class methods
+class Calculator {
+  add(a: number, b: number): number {
+    return a + b;
+  }
+}
+```
+
+#### 7. Use optional parameters and default values judiciously
+
+- Place optional parameters last
+- Use default values for common cases
+- Consider using options objects for many parameters
+
+```typescript
+// Good - optional parameter last
+function createUser(name: string, email?: string): User {
+  return {name, email: email ?? `${name}@example.com`};
+}
+
+// Good - default value
+function fetchData(url: string, timeout = 5000): Promise<Data> {
+  // implementation
+}
+
+// Good - options object for many parameters
+interface FetchOptions {
+  timeout?: number;
+  retries?: number;
+  headers?: Record<string, string>;
+}
+
+function fetchData(url: string, options: FetchOptions = {}): Promise<Data> {
+  const {timeout = 5000, retries = 3, headers = {}} = options;
+  // implementation
+}
+```
+
+#### 8. Use function overloads for complex signatures
+
+- Provide multiple call signatures for different use cases
+- Implement with the most general signature
+- Document each overload clearly
+
+```typescript
+// Good - function overloads
+function createDate(timestamp: number): Date;
+function createDate(year: number, month: number, day: number): Date;
+function createDate(dateString: string): Date;
+function createDate(arg1: number | string, arg2?: number, arg3?: number): Date {
+  if (typeof arg1 === 'string') {
+    return new Date(arg1);
+  }
+  if (arg2 !== undefined && arg3 !== undefined) {
+    return new Date(arg1, arg2, arg3);
+  }
+  return new Date(arg1);
+}
+```
+
+#### 9. Prefer async/await over raw Promises
+
+- More readable than promise chains
+- Better error handling with try/catch
+- Use `Promise.all()` for concurrent operations
+
+```typescript
+// Good - async/await
+async function fetchUserData(userId: string): Promise<UserData> {
+  try {
+    const user = await fetchUser(userId);
+    const posts = await fetchPosts(userId);
+    return {user, posts};
+  } catch (error) {
+    logger.error('Failed to fetch user data', error);
+    throw new UserDataError('Failed to fetch user data', {cause: error});
+  }
+}
+
+// Good - parallel requests
+async function fetchAllData(): Promise<AllData> {
+  const [users, posts, comments] = await Promise.all([
+    fetchUsers(),
+    fetchPosts(),
+    fetchComments(),
+  ]);
+  return {users, posts, comments};
+}
+```
+
+#### 10. Return discriminated unions instead of throwing for expected errors
+
+- Makes error handling explicit
+- Better than exceptions for control flow
+- Similar to Rust's Result type
+
+```typescript
+// Good - Result type pattern
+type Result<T, E = Error> =
+  | {success: true; data: T}
+  | {success: false; error: E};
+
+async function fetchUser(id: string): Promise<Result<User, UserError>> {
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    if (!response.ok) {
+      return {
+        success: false,
+        error: new UserError('User not found'),
+      };
+    }
+    const data = await response.json();
+    return {success: true, data};
+  } catch (error) {
+    return {
+      success: false,
+      error: new UserError('Network error', {cause: error}),
+    };
+  }
+}
+
+// Usage
+const result = await fetchUser('123');
+if (result.success) {
+  console.log(result.data.name); // TypeScript knows data exists
+} else {
+  console.error(result.error.message); // TypeScript knows error exists
+}
+```
+
+### Classes and Object-Oriented Programming
+
+#### 11. Favor composition over inheritance
+
+- Prefer composition and interfaces over class hierarchies
+- Use mixins for behavior sharing
+- Keep inheritance hierarchies shallow
+
+```typescript
+// Good - composition
+interface Logger {
+  log(message: string): void;
+}
+
+interface Storage {
+  save(key: string, value: unknown): void;
+  load(key: string): unknown;
+}
+
+class UserService {
+  constructor(
+    private logger: Logger,
+    private storage: Storage
+  ) {}
+
+  saveUser(user: User): void {
+    this.logger.log(`Saving user ${user.id}`);
+    this.storage.save(`user:${user.id}`, user);
+  }
+}
+
+// Bad - deep inheritance
+class Entity {}
+class Person extends Entity {}
+class Employee extends Person {}
+class Manager extends Employee {} // Too deep
+```
+
+#### 12. Use access modifiers appropriately
+
+- Make fields `private` by default
+- Use `protected` only for subclass access
+- Use `readonly` for immutable properties
+- Prefix private fields with `#` for true privacy
+
+```typescript
+// Good
+class BankAccount {
+  readonly #accountNumber: string;
+  #balance: number = 0;
+
+  constructor(accountNumber: string) {
+    this.#accountNumber = accountNumber;
+  }
+
+  deposit(amount: number): void {
+    if (amount <= 0) {
+      throw new Error('Amount must be positive');
+    }
+    this.#balance += amount;
+  }
+
+  getBalance(): number {
+    return this.#balance;
+  }
+}
+```
+
+#### 13. Implement proper equality and comparison methods
+
+- Override `toString()` for debugging
+- Implement proper equality checks
+- Use `Object.is()` for special value handling
+
+```typescript
+// Good
+class Point {
+  constructor(
+    public readonly x: number,
+    public readonly y: number
+  ) {}
+
+  equals(other: unknown): boolean {
+    if (!(other instanceof Point)) return false;
+    return this.x === other.x && this.y === other.y;
+  }
+
+  toString(): string {
+    return `Point(${this.x}, ${this.y})`;
+  }
+
+  distanceTo(other: Point): number {
+    const dx = this.x - other.x;
+    const dy = this.y - other.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+}
+```
+
+#### 14. Use abstract classes and interfaces appropriately
+
+- Abstract classes for shared implementation
+- Interfaces for contracts and type definitions
+- Prefer interfaces for public APIs
+
+```typescript
+// Good - interface for contract
+interface Repository<T> {
+  findById(id: string): Promise<T | null>;
+  save(entity: T): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+
+// Good - abstract class for shared implementation
+abstract class BaseRepository<T> implements Repository<T> {
+  constructor(protected tableName: string) {}
+
+  abstract findById(id: string): Promise<T | null>;
+  abstract save(entity: T): Promise<void>;
+
+  async delete(id: string): Promise<void> {
+    await db.execute(`DELETE FROM ${this.tableName} WHERE id = ?`, [id]);
+  }
+
+  protected logOperation(operation: string): void {
+    console.log(`${operation} on ${this.tableName}`);
+  }
+}
+```
+
+### Generics and Advanced Types
+
+#### 15. Use generics for reusable type-safe code
+
+- Parameterize types to make them reusable
+- Use constraints to restrict type parameters
+- Avoid over-generic code that loses type safety
+
+```typescript
+// Good - generic with constraints
+interface Identifiable {
+  id: string;
+}
+
+class Cache<T extends Identifiable> {
+  private items = new Map<string, T>();
+
+  set(item: T): void {
+    this.items.set(item.id, item);
+  }
+
+  get(id: string): T | undefined {
+    return this.items.get(id);
+  }
+
+  has(id: string): boolean {
+    return this.items.has(id);
+  }
+}
+
+// Usage
+interface User extends Identifiable {
+  name: string;
+}
+
+const userCache = new Cache<User>();
+userCache.set({id: '1', name: 'Alice'});
+```
+
+#### 16. Use utility types effectively
+
+- Leverage built-in utility types: `Partial`, `Required`, `Pick`, `Omit`, `Record`, etc.
+- Create custom utility types for domain-specific needs
+- Understand mapped types and conditional types
+
+```typescript
+// Good - using utility types
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  age: number;
+}
+
+// Pick only needed fields
+type UserPreview = Pick<User, 'id' | 'name'>;
+
+// Make all fields optional for updates
+type UserUpdate = Partial<User>;
+
+// Omit sensitive fields
+type PublicUser = Omit<User, 'email'>;
+
+// Custom utility type
+type Nullable<T> = {[K in keyof T]: T[K] | null};
+type OptionalUser = Nullable<User>;
+```
+
+#### 17. Use discriminated unions for type-safe state management
+
+- Add a discriminant property to distinguish union members
+- TypeScript can narrow types based on the discriminant
+- Excellent for state machines and action types
+
+```typescript
+// Good - discriminated union
+type LoadingState<T> =
+  | {status: 'idle'}
+  | {status: 'loading'}
+  | {status: 'success'; data: T}
+  | {status: 'error'; error: Error};
+
+function handleState<T>(state: LoadingState<T>): void {
+  switch (state.status) {
+    case 'idle':
+      console.log('Not started');
+      break;
+    case 'loading':
+      console.log('Loading...');
+      break;
+    case 'success':
+      console.log('Data:', state.data); // TypeScript knows data exists
+      break;
+    case 'error':
+      console.error('Error:', state.error.message); // TypeScript knows error exists
+      break;
+  }
+}
+```
+
+#### 18. Use type guards for runtime type checking
+
+- Create custom type guards with `is` predicates
+- Use `typeof`, `instanceof`, and `in` for built-in guards
+- Combine with discriminated unions for powerful type narrowing
+
+```typescript
+// Good - custom type guard
+interface Dog {
+  kind: 'dog';
+  bark(): void;
+}
+
+interface Cat {
+  kind: 'cat';
+  meow(): void;
+}
+
+type Pet = Dog | Cat;
+
+function isDog(pet: Pet): pet is Dog {
+  return pet.kind === 'dog';
+}
+
+function handlePet(pet: Pet): void {
+  if (isDog(pet)) {
+    pet.bark(); // TypeScript knows it's a Dog
+  } else {
+    pet.meow(); // TypeScript knows it's a Cat
+  }
+}
+```
+
+### Error Handling
+
+#### 19. Create custom error classes
+
+- Extend Error for domain-specific errors
+- Include relevant context in error messages
+- Use `cause` property for error chains
+
+```typescript
+// Good - custom error classes
+class AppError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    options?: ErrorOptions
+  ) {
+    super(message, options);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ValidationError extends AppError {
+  constructor(
+    message: string,
+    public readonly field: string,
+    options?: ErrorOptions
+  ) {
+    super(message, 'VALIDATION_ERROR', options);
+  }
+}
+
+class NotFoundError extends AppError {
+  constructor(resource: string, id: string, options?: ErrorOptions) {
+    super(`${resource} with id ${id} not found`, 'NOT_FOUND', options);
+  }
+}
+```
+
+#### 20. Handle errors at appropriate levels
+
+- Catch errors where you can handle them meaningfully
+- Let errors bubble up when you can't handle them
+- Always log errors with context
+
+```typescript
+// Good - error handling at appropriate level
+async function fetchUserWithRetry(id: string): Promise<User> {
+  const maxRetries = 3;
+  let lastError: Error;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fetchUser(id);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      logger.warn(`Fetch attempt ${i + 1} failed`, {id, error: lastError});
+      await sleep(1000 * Math.pow(2, i)); // exponential backoff
+    }
+  }
+
+  throw new AppError(
+    `Failed to fetch user after ${maxRetries} attempts`,
+    'FETCH_FAILED',
+    {cause: lastError!}
+  );
+}
+```
+
+#### 21. Never swallow errors silently
+
+- Always log or handle errors
+- If ignoring an error, document why
+- Use linters to catch empty catch blocks
+
+```typescript
+// Bad
+try {
+  await riskyOperation();
+} catch {
+  // Silent failure
+}
+
+// Good - explicit handling
+try {
+  await riskyOperation();
+} catch (error) {
+  logger.error('Risky operation failed', error);
+  throw error; // Re-throw if can't handle
+}
+
+// Good - intentional ignore with comment
+try {
+  await optionalOperation();
+} catch (error) {
+  // Intentionally ignoring - this operation is optional
+  // and failure is acceptable
+  logger.debug('Optional operation failed', error);
+}
+```
+
+### Modules and Organization
+
+#### 22. Use barrel exports sparingly
+
+- Barrel exports can cause circular dependencies
+- They can import more than needed
+- Use them only for public API surfaces
+
+```typescript
+// Good - explicit imports
+import {UserService} from './services/UserService';
+import {AuthService} from './services/AuthService';
+
+// Avoid - barrel exports for internal modules
+// export * from './internal-module'; // Can cause issues
+```
+
+#### 23. Organize code by feature, not by type
+
+- Group related functionality together
+- Colocate tests with implementation
+- Keep file structure shallow
+
+```
+// Good - feature-based
+src/
+  features/
+    users/
+      UserService.ts
+      UserService.test.ts
+      UserRepository.ts
+      types.ts
+      index.ts
+    auth/
+      AuthService.ts
+      AuthService.test.ts
+      types.ts
+      index.ts
+
+// Bad - type-based
+src/
+  services/
+    UserService.ts
+    AuthService.ts
+  repositories/
+    UserRepository.ts
+    AuthRepository.ts
+  types/
+    User.ts
+    Auth.ts
+```
+
+#### 24. Use path aliases for cleaner imports
+
+- Configure path aliases in tsconfig.json
+- Avoid relative path hell (../../../)
+- Use consistent naming conventions
+
+```typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/features/*": ["src/features/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
+  }
+}
+
+// Good - clean imports
+import { UserService } from '@/features/users/UserService';
+import { logger } from '@/shared/logger';
+
+// Bad - relative paths
+import { UserService } from '../../../features/users/UserService';
+```
+
+### Testing
+
+#### 25. Write testable code
+
+- Depend on abstractions, not concretions
+- Use dependency injection
+- Avoid tight coupling to external systems
+
+```typescript
+// Good - testable with dependency injection
+interface EmailService {
+  sendEmail(to: string, subject: string, body: string): Promise<void>;
+}
+
+class UserService {
+  constructor(private emailService: EmailService) {}
+
+  async createUser(data: CreateUserData): Promise<User> {
+    const user = await this.saveUser(data);
+    await this.emailService.sendEmail(
+      user.email,
+      'Welcome!',
+      'Welcome to our platform'
+    );
+    return user;
+  }
+
+  private async saveUser(data: CreateUserData): Promise<User> {
+    // implementation
+  }
+}
+
+// In tests - easy to mock
+class MockEmailService implements EmailService {
+  sentEmails: Array<{to: string; subject: string; body: string}> = [];
+
+  async sendEmail(to: string, subject: string, body: string): Promise<void> {
+    this.sentEmails.push({to, subject, body});
+  }
+}
+
+describe('UserService', () => {
+  it('sends welcome email when creating user', async () => {
+    const mockEmailService = new MockEmailService();
+    const userService = new UserService(mockEmailService);
+
+    await userService.createUser({email: 'test@example.com', name: 'Test'});
+
+    expect(mockEmailService.sentEmails).toHaveLength(1);
+    expect(mockEmailService.sentEmails[0].subject).toBe('Welcome!');
+  });
+});
+```
+
+#### 26. Use meaningful test names
+
+- Describe what the test verifies
+- Follow the "should" or "it" convention
+- Group related tests with `describe`
+
+```typescript
+// Good
+describe('UserService', () => {
+  describe('createUser', () => {
+    it('should create a user with valid data', async () => {
+      // test
+    });
+
+    it('should throw ValidationError when email is invalid', async () => {
+      // test
+    });
+
+    it('should send welcome email after user creation', async () => {
+      // test
+    });
+  });
+});
+```
+
+### Performance
+
+#### 27. Be mindful of unnecessary re-renders (React)
+
+- Use `useMemo` for expensive computations
+- Use `useCallback` for stable function references
+- Use `React.memo` for component memoization
+
+```typescript
+// Good - memoized expensive computation
+const sortedItems = useMemo(() => {
+  return items.sort((a, b) => a.price - b.price);
+}, [items]);
+
+// Good - stable callback reference
+const handleClick = useCallback((id: string) => {
+  console.log('Clicked', id);
+}, []);
+```
+
+#### 28. Avoid premature optimization
+
+- Write clear code first, optimize when needed
+- Profile before optimizing
+- Focus on algorithmic improvements over micro-optimizations
+
+#### 29. Use appropriate data structures
+
+- Use `Set` for unique values and fast lookups
+- Use `Map` for key-value pairs with any key type
+- Use arrays for ordered collections
+- Consider WeakMap/WeakSet for memory management
+
+```typescript
+// Good - using Set for unique values
+const uniqueIds = new Set<string>();
+items.forEach((item) => uniqueIds.add(item.id));
+
+// Good - using Map for fast lookups
+const userMap = new Map(users.map((u) => [u.id, u]));
+const user = userMap.get('123'); // O(1) lookup
+```
+
+### Code Quality
+
+#### 30. Use linters and formatters
+
+- Configure ESLint with TypeScript rules
+- Use Prettier for consistent formatting
+- Set up pre-commit hooks
+
+#### 31. Write self-documenting code
+
+- Use descriptive names
+- Keep functions small and focused
+- Add comments only when necessary to explain "why", not "what"
+
+```typescript
+// Good - self-documenting
+function calculateOrderTotal(
+  items: OrderItem[],
+  discountCode?: string
+): number {
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const discount = discountCode ? applyDiscount(subtotal, discountCode) : 0;
+  const tax = calculateTax(subtotal - discount);
+  return subtotal - discount + tax;
+}
+
+// Bad - unclear
+function calc(items: any[], code?: string): number {
+  let t = 0;
+  for (let i = 0; i < items.length; i++) {
+    t += items[i].p * items[i].q;
+  }
+  // ... more unclear code
+}
+```
+
+#### 32. Follow the Single Responsibility Principle
+
+- Each function/class should have one reason to change
+- Extract separate concerns into separate functions
+- Keep modules cohesive
+
+```typescript
+// Good - single responsibility
+class UserRepository {
+  async findById(id: string): Promise<User | null> {
+    const row = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+    return row ? this.mapToUser(row) : null;
+  }
+
+  private mapToUser(row: any): User {
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      createdAt: new Date(row.created_at),
+    };
+  }
+}
+
+class UserValidator {
+  validate(user: CreateUserData): ValidationResult {
+    const errors: string[] = [];
+
+    if (!this.isValidEmail(user.email)) {
+      errors.push('Invalid email');
+    }
+
+    if (user.name.length < 2) {
+      errors.push('Name too short');
+    }
+
+    return errors.length > 0 ? {valid: false, errors} : {valid: true};
+  }
+
+  private isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+}
+```
+
+## TypeScript-Specific Anti-Patterns
+
+### Avoid These Common Mistakes
+
+#### 1. Using `any` unnecessarily
+
+```typescript
+// Bad
+function processData(data: any) {
+  return data.value;
+}
+
+// Good
+function processData<T extends {value: string}>(data: T) {
+  return data.value;
+}
+```
+
+#### 2. Not handling null/undefined
+
+```typescript
+// Bad
+function getUserName(user: User) {
+  return user.name.toUpperCase(); // Might crash if name is null
+}
+
+// Good
+function getUserName(user: User): string {
+  return user.name?.toUpperCase() ?? 'Unknown';
+}
+```
+
+#### 3. Overusing non-null assertion (!)
+
+```typescript
+// Bad - overusing !
+const value = getValue()!;
+const result = value.property!.method!();
+
+// Good - proper null handling
+const value = getValue();
+if (value?.property) {
+  const result = value.property.method();
+}
+```
+
+#### 4. Type assertions instead of proper typing
+
+```typescript
+// Bad
+const data = fetchData() as UserData;
+
+// Good
+const data = await fetchData();
+if (isUserData(data)) {
+  // Use data as UserData
+}
+```
+
+#### 5. Mutating readonly types
+
+```typescript
+// Bad
+function addItem(items: readonly Item[], newItem: Item) {
+  (items as Item[]).push(newItem); // Casting away readonly
+}
+
+// Good
+function addItem(items: readonly Item[], newItem: Item): Item[] {
+  return [...items, newItem];
+}
+```
+
+## Naming Conventions
+
+### Files and Directories
+
+- Use kebab-case for file names: `user-service.ts`
+- Use PascalCase for class/component files: `UserService.ts`, `Button.tsx`
+- Use lowercase for directories: `features/user-management`
+
+### Variables and Functions
+
+- Use camelCase: `getUserById`, `isValidEmail`
+- Use UPPER_SNAKE_CASE for constants: `MAX_RETRY_COUNT`, `API_BASE_URL`
+- Use descriptive names: `fetchUserData` not `fetchData`
+
+### Types and Interfaces
+
+- Use PascalCase: `User`, `ApiResponse`, `LoadingState`
+- Prefix interfaces with `I` sparingly (TypeScript convention is not to prefix)
+- Use descriptive generic names: `TData`, `TError` or just `T`, `U`, `V` for simple cases
+
+### Booleans
+
+- Prefix with `is`, `has`, `should`, `can`: `isLoading`, `hasError`, `shouldRetry`
+
+## Documentation
+
+### TSDoc Comments
+
+````typescript
+/**
+ * Fetches user data from the API.
+ *
+ * @param userId - The unique identifier of the user
+ * @param options - Optional fetch options
+ * @returns A promise that resolves to the user data
+ * @throws {NotFoundError} When the user doesn't exist
+ * @throws {NetworkError} When the network request fails
+ *
+ * @example
+ * ```typescript
+ * const user = await fetchUser('123');
+ * console.log(user.name);
+ * ```
+ */
+async function fetchUser(
+  userId: string,
+  options?: FetchOptions
+): Promise<User> {
+  // implementation
+}
+````
+
+## Conclusion
+
+These TypeScript guidelines are designed to help you write:
+
+- **Type-safe code** that catches errors at compile time
+- **Maintainable code** that's easy to understand and change
+- **Performant code** that doesn't sacrifice clarity
+- **Testable code** that's easy to verify
+
+Remember: These are guidelines, not rigid rules. Use good judgment and adapt them to your specific context. The goal is to write code that is clear, correct, and maintainable.
