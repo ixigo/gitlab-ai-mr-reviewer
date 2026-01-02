@@ -22,15 +22,157 @@ Review-Robo is an intelligent code review automation tool that leverages Claude 
 
 ---
 
-## 📋 Quick Start
+## 🚀 GitLab Integration Setup
 
-### Prerequisites
+### Quick Setup
 
-- Node.js 18+
-- GitLab instance with API access
-- Cursor API key ([Get one here](https://cursor.com/settings))
+Review-Robo integrates seamlessly with GitLab CI/CD pipelines. Follow these steps to get started:
 
-### Installation
+#### 1. Add CI/CD Variables
+
+In your GitLab project, go to **Settings → CI/CD → Variables** and add:
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `CURSOR_API_KEY` | ✅ Yes | Cursor API key for AI access | `cur-xxxxxxxxxxxxx` |
+| `GITLAB_TOKEN` | ✅ Yes | GitLab personal/project token with API access | `glpat-xxxxxxxxxxxxx` |
+
+**Note**: 
+- `CURSOR_API_KEY` must be **manually added** in CI/CD Variables
+- `GITLAB_TOKEN` is **optional** in GitLab CI because `CI_JOB_TOKEN` is automatically provided and can be used instead
+- If you choose to use `GITLAB_TOKEN`, it must be **manually added** with scopes: `api`, `read_repository`, `write_repository`
+- For local testing, `GITLAB_TOKEN` is **required** and must have API access
+
+**Security**: ⚠️ Always **mask** these variables in GitLab CI/CD settings to prevent exposure in logs.
+
+#### 2. Add Review Job to Pipeline
+
+Add this to your `.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - review
+
+code_review:
+  stage: review
+  image: registry.example.com/review-robo:latest
+  script:
+    - node /app/src/index.js
+  artifacts:
+    paths:
+      - .cursor/reviews/
+    expire_in: 7 days
+  allow_failure: true  # Don't block pipeline on review failure
+  only:
+    - merge_requests
+```
+
+**That's it!** Review-Robo will automatically:
+- Detect your project's tech stack
+- Fetch MR changes
+- Run AI-powered code review
+- Post comments to your MR
+
+### Complete Configuration
+
+#### Environment Variables for GitLab CI
+
+##### Required Variables
+
+| Variable | Description | How to Set |
+|----------|-------------|------------|
+| `CI_PROJECT_ID` | GitLab project ID | ✅ Automatically set by GitLab CI |
+| `CI_MERGE_REQUEST_IID` | MR internal ID (e.g., `!42`) | ✅ Automatically set by GitLab CI |
+| `CI_SERVER_URL` | GitLab instance URL | ✅ Automatically set by GitLab CI |
+| `CURSOR_API_KEY` | Cursor API key | ⚠️ **Manual**: Add in CI/CD Variables |
+| `GITLAB_TOKEN` | GitLab auth token with API access | ⚠️ **Manual**: Add `GITLAB_TOKEN` in CI/CD Variables |
+
+**Important**: 
+- `GITLAB_TOKEN` must be **manually added** in GitLab CI/CD Variables with **API access** scopes: `api`, `read_repository`, `write_repository`
+- Alternatively, `CI_JOB_TOKEN` is automatically provided by GitLab CI and has necessary permissions (no setup needed)
+- If using `GITLAB_TOKEN`, it must have access to read repository and post comments on merge requests
+
+##### Optional Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REVIEW_CONFIG_TYPE` | `next-ts` | Tech stack config (`next-ts`, `java-maven`, `java-gradle`, `kotlin`) |
+| `OUTPUT_DIR` | `.cursor/reviews` | Directory for review artifacts |
+
+#### Advanced GitLab CI Configuration
+
+```yaml
+stages:
+  - review
+  - test
+  - build
+
+automated_code_review:
+  stage: review
+  image: registry.example.com/review-robo:latest
+  variables:
+    REVIEW_CONFIG_TYPE: "next-ts"  # Optional: override auto-detection
+    OUTPUT_DIR: ".cursor/reviews"   # Optional: custom output directory
+  before_script:
+    - echo "Starting code review for MR !$CI_MERGE_REQUEST_IID"
+  script:
+    - node /app/src/index.js
+  after_script:
+    - echo "Review artifacts saved to $OUTPUT_DIR"
+  artifacts:
+    paths:
+      - .cursor/reviews/
+    expire_in: 7 days
+    when: always
+  allow_failure: true  # Don't block pipeline
+  only:
+    - merge_requests
+  except:
+    - schedules
+    - tags
+```
+
+#### Docker Image Setup
+
+If you need to build and push your own Docker image:
+
+```bash
+# Build the image
+docker build -f base.Dockerfile -t review-robo:latest .
+
+# Tag for your registry
+docker tag review-robo:latest registry.example.com/review-robo:latest
+
+# Push to registry
+docker push registry.example.com/review-robo:latest
+```
+
+### Supported Tech Stacks
+
+Review-Robo **automatically detects** your project's tech stack:
+
+| Tech Stack | Auto-Detection | Config Name |
+|------------|----------------|-------------|
+| **TypeScript/Next.js** | `package.json` has `next` + `react` | `next-ts` |
+| **Java/Maven** | `pom.xml` exists | `java-maven` |
+| **Java/Gradle** | `build.gradle` exists | `java-gradle` |
+| **Kotlin** | `.kt` files + `build.gradle.kts` | `kotlin` |
+
+**No configuration needed!** The system automatically selects the appropriate review rules.
+
+#### Environment Variables for Local Testing
+
+For local development and testing, you need to set all variables manually:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `CI_PROJECT_ID` | GitLab project ID | ✅ Yes |
+| `CI_MERGE_REQUEST_IID` | MR internal ID (e.g., `!42`) | ✅ Yes |
+| `CI_SERVER_URL` | GitLab instance URL | ✅ Yes |
+| `CURSOR_API_KEY` | Cursor API key | ✅ Yes |
+| `GITLAB_TOKEN` | GitLab personal/project token with API access | ✅ Yes |
+
+**Setup for Local Testing**:
 
 ```bash
 # Clone repository
@@ -45,58 +187,20 @@ curl https://cursor.com/install -fsS | bash
 
 # Configure environment
 cp env.example .env
-# Edit .env with your credentials
+# Edit .env with your credentials:
+# CI_PROJECT_ID=12345
+# CI_MERGE_REQUEST_IID=42
+# CI_SERVER_URL=https://gitlab.com
+# CURSOR_API_KEY=cur-xxxxx
+# GITLAB_TOKEN=glpat-xxxxx  # Required: Must have API access (api, read_repository, write_repository scopes)
 
-# Run review (requires active MR context)
+# Run review
 npm start
 ```
 
-### GitLab CI Integration
+**See**: [Complete GitLab CI Integration Guide](./docs/05-gitlab-ci-integration.md) for more examples and patterns.
 
-```yaml
-# .gitlab-ci.yml
-stages:
-  - review
-
-code_review:
-  stage: review
-  image: registry.example.com/review-robo:latest
-  # Tech stack is auto-detected - no configuration needed!
-  script:
-    - node /app/src/index.js
-  artifacts:
-    paths:
-      - .cursor/reviews/
-    expire_in: 7 days
-  only:
-    - merge_requests
-```
-
----
-
-## 📖 Documentation
-
-Comprehensive documentation is available in the [`docs/`](./docs/) directory:
-
-### Getting Started
-- **[📘 Introduction](./docs/01-introduction.md)** - What is Review-Robo and why use it?
-- **[⚙️ Setup & Configuration](./docs/04-setup-configuration.md)** - Installation and environment setup
-
-### Understanding the System
-- **[🏗️ Architecture](./docs/02-architecture.md)** - System design and components
-- **[🔄 Workflow](./docs/03-workflow.md)** - Step-by-step process with diagrams
-
-### Integration & Usage
-- **[🚀 GitLab CI Integration](./docs/05-gitlab-ci-integration.md)** - Pipeline examples and patterns
-- **[📚 API Reference](./docs/06-api-reference.md)** - Environment variables and configuration
-
-### Support
-- **[🔧 Troubleshooting](./docs/07-troubleshooting.md)** - Common issues and solutions
-
-### Project Updates
-- **[📢 Tech Townhall (Nov 2025)](./docs/tech_townhall_nov_25.md)** - Evolution, current status, and roadmap
-
-**Start here**: [Documentation Index](./docs/INDEX.md)
+**See**: [API Reference](./docs/06-api-reference.md) for complete environment variable documentation.
 
 ---
 
@@ -144,6 +248,68 @@ Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 ```
 
 **See**: [Detailed Workflow](./docs/03-workflow.md) for complete process breakdown.
+
+---
+
+## 🤝 How to Contribute
+
+We welcome contributions! Review-Robo is open to improvements in:
+
+- **New Language Support**: Add configurations for Python, Go, Rust, etc.
+- **Enhanced Rules**: Improve review guidelines and patterns
+- **Better Parsing**: Handle edge cases in AI output
+- **Performance**: Optimize for very large diffs
+- **Integrations**: Support GitHub, Bitbucket, etc.
+
+### Quick Contribution Guide
+
+1. **Fork the repository**
+2. **Create a feature branch** (never commit to `main`, `prod`, `master`, or `production`)
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+3. **Make your changes** following our [TypeScript guidelines](./.cursor/rules/typescript-rules.mdc)
+4. **Add documentation** if needed
+5. **Test with sample MRs**
+6. **Commit using conventional format**:
+   ```bash
+   git commit -m "feat: add your feature description"
+   ```
+7. **Submit a pull request**
+
+### Detailed Contribution Guidelines
+
+For complete contribution guidelines, including:
+- Development setup
+- Commit message format (Conventional Commits)
+- Pull request process
+- Code style and standards
+- Testing requirements
+
+**See**: [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.
+
+---
+
+## 📖 Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+### Getting Started
+- **[📘 Introduction](./docs/01-introduction.md)** - What is Review-Robo and why use it?
+- **[⚙️ Setup & Configuration](./docs/04-setup-configuration.md)** - Installation and environment setup
+
+### Understanding the System
+- **[🏗️ Architecture](./docs/02-architecture.md)** - System design and components
+- **[🔄 Workflow](./docs/03-workflow.md)** - Step-by-step process with diagrams
+
+### Integration & Usage
+- **[🚀 GitLab CI Integration](./docs/05-gitlab-ci-integration.md)** - Pipeline examples and patterns
+- **[📚 API Reference](./docs/06-api-reference.md)** - Environment variables and configuration
+
+### Support
+- **[🔧 Troubleshooting](./docs/07-troubleshooting.md)** - Common issues and solutions
+
+**Start here**: [Documentation Index](./docs/INDEX.md)
 
 ---
 
@@ -199,60 +365,6 @@ Effort: 10 min | Impact: High | Priority: High
 
 ---
 
-## 🛠️ Supported Technologies
-
-Review-Robo **automatically detects** your project's tech stack - no configuration needed!
-
-### TypeScript/Next.js (`next-ts`)
-
-**Auto-Detected When**:
-- `package.json` contains `next` and `react` dependencies
-
-**Focus Areas**:
-- TypeScript type safety
-- React hooks validation
-- Next.js patterns (Server/Client components)
-- Performance optimization
-- Accessibility (WCAG)
-
-**Common Issues Detected**:
-- `any` type usage
-- Missing hook dependencies
-- Improper component usage
-- Performance anti-patterns
-
-### Java/Maven (`java-maven`)
-
-**Auto-Detected When**:
-- `pom.xml` exists in project root
-- Java source files (`.java`) are present
-
-**Focus Areas**:
-- Java best practices (Java 17+)
-- SOLID principles
-- Thread safety
-- Spring framework validation
-- Maven dependency management
-
-**Common Issues Detected**:
-- Thread safety violations
-- Null pointer risks
-- Stream API misuse
-- Spring bean lifecycle issues
-
-### Unsupported Projects
-
-If your project doesn't match any supported tech stack, Review-Robo will:
-- Log a clear message explaining the supported stacks
-- Skip the review gracefully with exit code 0
-- Not fail your CI pipeline
-
-### Custom Tech Stacks
-
-Want to add support for new languages? You can extend the detection logic in `src/services/tech-stack-detector.js`. See [Configuration Guide](./docs/04-setup-configuration.md#creating-custom-configurations).
-
----
-
 ## 📊 Grading System
 
 | Grade | Score | Description |
@@ -271,87 +383,27 @@ Want to add support for new languages? You can extend the detection logic in `sr
 
 ---
 
-## 🚀 Deployment
+## 🛠️ Supported Technologies
 
-### Docker Deployment
+Review-Robo **automatically detects** your project's tech stack - no configuration needed!
 
-```bash
-# Build image
-docker build -f base.Dockerfile -t review-robo:latest .
+| Tech Stack | Auto-Detection | Focus Areas |
+|------------|----------------|-------------|
+| **TypeScript/Next.js** | `package.json` has `next` + `react` | Type safety, React hooks, Next.js patterns, Performance, Accessibility |
+| **Java/Maven** | `pom.xml` exists | Java best practices, SOLID principles, Thread safety, Spring validation |
+| **Java/Gradle** | `build.gradle` exists | Same as Java/Maven with Gradle-specific patterns |
+| **Kotlin** | `.kt` files + `build.gradle.kts` | Kotlin idioms, Null safety, Coroutines, DSL patterns |
 
-# Push to registry
-docker tag review-robo:latest registry.example.com/review-robo:latest
-docker push registry.example.com/review-robo:latest
+### Unsupported Projects
 
-# Use in GitLab CI
-# .gitlab-ci.yml
-code_review:
-  image: registry.example.com/review-robo:latest
-  script:
-    - node /app/src/index.js
-```
+If your project doesn't match any supported tech stack, Review-Robo will:
+- Log a clear message explaining the supported stacks
+- Skip the review gracefully with exit code 0
+- Not fail your CI pipeline
 
-### GitLab CI Setup
+### Custom Tech Stacks
 
-1. **Add CI/CD Variables**:
-   - `CURSOR_API_KEY` (masked)
-   - `GITLAB_TOKEN` (masked) - optional, can use CI_JOB_TOKEN
-
-2. **Add Job to Pipeline**:
-   ```yaml
-   # .gitlab-ci.yml
-   stages:
-     - review
-
-   code_review:
-     stage: review
-     image: registry.example.com/review-robo:latest
-     # Tech stack is auto-detected, no configuration needed!
-     script:
-       - node /app/src/index.js
-     only:
-       - merge_requests
-   ```
-
-3. **Test with Sample MR**
-
-**See**: [Complete CI Integration Guide](./docs/05-gitlab-ci-integration.md)
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```bash
-# Required
-CI_PROJECT_ID=12345
-CI_MERGE_REQUEST_IID=42
-CURSOR_API_KEY=cur-xxxxx
-GITLAB_TOKEN=glpat-xxxxx  # or use CI_JOB_TOKEN
-
-# Optional
-OUTPUT_DIR=.cursor/reviews
-```
-
-**Note**: Tech stack is **automatically detected**! No configuration needed.
-- `next-ts`: Auto-detected if `package.json` has `next` and `react`
-- `java-maven`: Auto-detected if `pom.xml` exists with Java files
-
-### Custom Configuration
-
-To add support for a new tech stack, extend the detection logic:
-
-```bash
-# Edit the tech stack detector
-nano src/services/tech-stack-detector.js
-
-# Add your detection logic
-# Create matching config directory
-mkdir -p config/my-tech-stack/rules/
-```
-
-**See**: [Configuration Reference](./docs/06-api-reference.md)
+Want to add support for new languages? You can extend the detection logic in `src/services/tech-stack-detector.ts`. See [Configuration Guide](./docs/04-setup-configuration.md#creating-custom-configurations).
 
 ---
 
@@ -417,25 +469,6 @@ review-robo/
 
 ---
 
-## 🤝 Contributing
-
-Contributions welcome! Areas for improvement:
-
-1. **New Language Support**: Add configurations for Python, Go, Rust, etc.
-2. **Enhanced Rules**: Improve review guidelines
-3. **Better Parsing**: Handle edge cases in AI output
-4. **Performance**: Optimize for very large diffs
-5. **Integrations**: Support GitHub, Bitbucket
-
-**To Contribute**:
-1. Fork the repository
-2. Create feature branch
-3. Add documentation
-4. Test with sample MRs
-5. Submit pull request
-
----
-
 ## 📄 License
 
 ISC License - See LICENSE file for details
@@ -444,16 +477,12 @@ ISC License - See LICENSE file for details
 
 ## 🆘 Support
 
-### Documentation
-- [Complete Documentation Index](./docs/INDEX.md)
-- [Troubleshooting Guide](./docs/07-troubleshooting.md)
-- [API Reference](./docs/06-api-reference.md)
-
 ### Getting Help
 1. Check [Troubleshooting Guide](./docs/07-troubleshooting.md)
-2. Search existing issues
-3. Ask in team chat
-4. File new issue with debug info
+2. Review [Documentation Index](./docs/INDEX.md)
+3. Search existing issues
+4. Ask in team chat
+5. File new issue with debug info
 
 ---
 
