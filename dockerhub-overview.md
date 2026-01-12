@@ -1,8 +1,8 @@
-# Review-Robo 🤖
+# GitLab AI MR Reviewer 🤖
 
 **AI-Powered Automated Code Review System for GitLab Merge Requests**
 
-Review-Robo is an intelligent code review automation tool that leverages **Claude Sonnet 4.5** through **Cursor Agent CLI** to provide comprehensive, context-aware code reviews for your GitLab merge requests.
+GitLab AI MR Reviewer is an intelligent code review automation tool that leverages **Claude Sonnet 4.5** through **Cursor Agent CLI** to provide comprehensive, context-aware code reviews for your GitLab merge requests.
 
 ---
 
@@ -11,7 +11,7 @@ Review-Robo is an intelligent code review automation tool that leverages **Claud
 ### Pull the Image
 
 ```bash
-docker pull your-registry/review-robo:latest
+docker pull ixigotech/gitlab-ai-mr-reviewer:latest
 ```
 
 ### Basic Usage in GitLab CI
@@ -23,7 +23,7 @@ stages:
 
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   artifacts:
@@ -34,7 +34,7 @@ code_review:
     - merge_requests
 ```
 
-**That's it!** Review-Robo automatically:
+**That's it!** GitLab AI MR Reviewer automatically:
 - ✅ Detects your project's tech stack (TypeScript/Next.js, Java/Maven, Kotlin, etc.)
 - ✅ Fetches MR diff from GitLab
 - ✅ Performs AI-powered code review
@@ -55,16 +55,61 @@ code_review:
 
 ## 📋 Environment Variables
 
-### Required Variables
+### Required Variables for GitLab CI
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `CURSOR_API_KEY` | Cursor API key for AI access | `cur-xxxxxxxxxxxxx` |
-| `CI_PROJECT_ID` | GitLab project ID | `12345` |
-| `CI_MERGE_REQUEST_IID` | Merge request internal ID | `42` |
-| `GITLAB_TOKEN` | GitLab API token (or use `CI_JOB_TOKEN`) | `glpat-xxxxx` |
+These variables must be configured in your GitLab project's **CI/CD Variables** (Settings → CI/CD → Variables):
 
-**Note**: In GitLab CI, `CI_JOB_TOKEN` is automatically provided - no manual token needed!
+| Variable | Description | How to Set | Example |
+|----------|-------------|------------|---------|
+| `CURSOR_API_KEY` | Cursor API key for AI access | ⚠️ **Manual**: Add in CI/CD Variables | `cur-xxxxxxxxxxxxx` |
+| `CI_PROJECT_ID` | GitLab project ID | ✅ **Automatic**: Set by GitLab CI | `12345` |
+| `CI_MERGE_REQUEST_IID` | Merge request internal ID | ✅ **Automatic**: Set by GitLab CI | `42` |
+| `CI_SERVER_URL` | GitLab instance URL | ✅ **Automatic**: Set by GitLab CI | `https://gitlab.com` |
+| `GITLAB_TOKEN` | GitLab API token | ⚠️ **Optional**: Use `CI_JOB_TOKEN` instead (automatic) | `glpat-xxxxx` |
+
+**Important Notes**:
+- ✅ `CI_PROJECT_ID`, `CI_MERGE_REQUEST_IID`, and `CI_SERVER_URL` are **automatically provided** by GitLab CI - no setup needed!
+- ✅ `CI_JOB_TOKEN` is **automatically provided** by GitLab CI and has necessary permissions - no manual token needed!
+- ⚠️ `CURSOR_API_KEY` **must be manually added** in GitLab CI/CD Variables (see [How to Get Cursor API Key](#-how-to-get-cursor-api-key) below)
+- ⚠️ If you choose to use `GITLAB_TOKEN` instead of `CI_JOB_TOKEN`, it must be manually added with scopes: `api`, `read_repository`, `write_repository`
+
+### How to Get Cursor API Key
+
+GitLab AI MR Reviewer uses **Cursor Agent CLI** which connects to **Claude Sonnet 4.5** for AI-powered code reviews.
+
+**Steps to get your Cursor API Key**:
+
+1. **Sign up/Login to Cursor**:
+   - Go to [https://cursor.com](https://cursor.com)
+   - Create an account or sign in
+
+2. **Navigate to API Settings**:
+   - Go to [https://cursor.com/settings](https://cursor.com/settings)
+   - Click on **"API Keys"** section
+
+3. **Create New API Key**:
+   - Click **"Create API Key"** or **"Generate New Key"**
+   - Copy the API key (it starts with `cur-`)
+   - ⚠️ **Important**: Save it immediately - you won't be able to see it again!
+
+4. **Add to GitLab CI/CD Variables**:
+   - In your GitLab project, go to **Settings → CI/CD → Variables**
+   - Click **"Add variable"**
+   - **Key**: `CURSOR_API_KEY`
+   - **Value**: Paste your API key (e.g., `cur-xxxxxxxxxxxxx`)
+   - ✅ **Check "Mask variable"** to hide it in logs
+   - ✅ **Check "Protect variable"** if you want it only in protected branches
+   - Click **"Add variable"**
+
+**API Key Format**:
+- Starts with `cur-` prefix
+- Example: `cur-abc123def456ghi789`
+
+**Security Best Practices**:
+- ✅ Always **mask** the variable in GitLab CI/CD settings
+- ✅ Use **protected variables** for production branches
+- ✅ Rotate API keys regularly
+- ✅ Never commit API keys to repository
 
 ### Optional Variables
 
@@ -77,7 +122,7 @@ code_review:
 
 ## 🎯 Supported Technologies
 
-Review-Robo **automatically detects** your project's tech stack:
+GitLab AI MR Reviewer **automatically detects** your project's tech stack:
 
 - **TypeScript/Next.js** (`next-ts`) - Auto-detected when `package.json` has `next` and `react`
 - **Java/Maven** (`java-maven`) - Auto-detected when `pom.xml` exists
@@ -95,7 +140,7 @@ No manual configuration needed!
 ```yaml
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -107,7 +152,7 @@ code_review:
 ```yaml
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   artifacts:
@@ -126,7 +171,7 @@ code_review:
 # Review frontend
 review_frontend:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -136,7 +181,7 @@ review_frontend:
 # Review backend
 review_backend:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -154,7 +199,7 @@ docker run --rm \
   -e CI_MERGE_REQUEST_IID=42 \
   -v $(pwd):/workspace \
   -w /workspace \
-  your-registry/review-robo:latest \
+  ixigotech/gitlab-ai-mr-reviewer:latest \
   node /app/dist/index.js
 ```
 
@@ -168,8 +213,8 @@ docker run --rm \
 
 ### Included Components
 - ✅ Node.js runtime (v20.11.1)
-- ✅ Cursor CLI (pre-installed)
-- ✅ Review-Robo application (compiled TypeScript)
+- ✅ Cursor Agent CLI (pre-installed)
+- ✅ GitLab AI MR Reviewer application (compiled TypeScript)
 - ✅ Multi-tech-stack configurations
 
 ### Image Size
@@ -183,13 +228,21 @@ docker run --rm \
 
 ---
 
-## 📊 What Review-Robo Does
+## 📊 What GitLab AI MR Reviewer Does
 
 1. **Fetches MR Diff** - Retrieves all changes from GitLab API
 2. **Detects Tech Stack** - Automatically identifies project technology
-3. **AI Analysis** - Uses Claude Sonnet 4.5 to analyze code changes
+3. **AI Analysis** - Uses **Cursor Agent CLI** with **Claude Sonnet 4.5** to analyze code changes
 4. **Posts Comments** - Creates inline comments on specific lines
 5. **Summary Report** - Posts overall assessment with metrics and grading
+
+### AI Agent Details
+
+- **Agent**: Cursor Agent CLI
+- **AI Model**: Claude Sonnet 4.5 (via Cursor)
+- **Provider**: Cursor (powered by Anthropic)
+- **API Key Required**: Yes (`CURSOR_API_KEY`)
+- **How to Get API Key**: See [How to Get Cursor API Key](#-how-to-get-cursor-api-key) section above
 
 ### Review Output
 
@@ -212,9 +265,10 @@ docker run --rm \
 
 **Best Practices**:
 - ✅ Use `CI_JOB_TOKEN` in GitLab CI (automatic, no manual token needed)
-- ✅ Mask `CURSOR_API_KEY` in CI/CD variables
-- ✅ Use read-only tokens when possible
+- ✅ Mask `CURSOR_API_KEY` in CI/CD variables (Settings → CI/CD → Variables → Mask variable)
+- ✅ Protect variables for production branches (Settings → CI/CD → Variables → Protect variable)
 - ✅ Rotate API keys regularly
+- ✅ Never commit API keys to repository
 
 ---
 
@@ -235,14 +289,25 @@ docker run --rm \
 ## 🐛 Troubleshooting
 
 ### Issue: "cursor-agent not found"
-The image includes Cursor CLI pre-installed. If you see this error, ensure you're using the correct image.
+The image includes Cursor Agent CLI pre-installed. If you see this error, ensure you're using the correct image.
 
 ### Issue: "Missing required environment variable"
-Ensure all required variables are set:
-- `CURSOR_API_KEY`
-- `CI_PROJECT_ID`
-- `CI_MERGE_REQUEST_IID`
-- `GITLAB_TOKEN` or `CI_JOB_TOKEN`
+Ensure all required variables are set in GitLab CI/CD Variables:
+
+**Automatically provided by GitLab CI** (no setup needed):
+- `CI_PROJECT_ID` - Automatically set
+- `CI_MERGE_REQUEST_IID` - Automatically set
+- `CI_SERVER_URL` - Automatically set
+- `CI_JOB_TOKEN` - Automatically set (can be used instead of `GITLAB_TOKEN`)
+
+**Must be manually added in CI/CD Variables**:
+- `CURSOR_API_KEY` - ⚠️ **Required**: Add in Settings → CI/CD → Variables
+  - Get your key from: https://cursor.com/settings → API Keys
+  - Format: `cur-xxxxxxxxxxxxx`
+  - ✅ Mask the variable to hide it in logs
+
+**Optional** (if not using `CI_JOB_TOKEN`):
+- `GITLAB_TOKEN` - Only needed if you want to use a personal/project token instead of `CI_JOB_TOKEN`
 
 ### Issue: "Failed to fetch MR data"
 - Verify `GITLAB_TOKEN` has `api` scope
@@ -250,9 +315,12 @@ Ensure all required variables are set:
 - Ensure GitLab server URL is accessible
 
 ### Issue: "Cursor API error"
-- Verify `CURSOR_API_KEY` is valid
-- Check API rate limits
-- Ensure network connectivity to Cursor API
+- Verify `CURSOR_API_KEY` is valid and correctly set in CI/CD Variables
+- Check that the API key format is correct (starts with `cur-`)
+- Verify the key hasn't expired or been revoked
+- Check API rate limits on your Cursor plan
+- Ensure network connectivity to Cursor API from your GitLab runner
+- **How to verify**: Go to https://cursor.com/settings → API Keys to check your key status
 
 ---
 
@@ -303,13 +371,14 @@ ISC License - See [LICENSE](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/
 
 ## 🎓 Learn More
 
-- [Cursor Documentation](https://cursor.com/docs)
-- [Claude Sonnet 4.5](https://www.anthropic.com/claude)
-- [GitLab MR API](https://docs.gitlab.com/ee/api/merge_requests.html)
+- **Cursor Agent CLI**: [Cursor Documentation](https://cursor.com/docs)
+- **Get Cursor API Key**: [Cursor Settings → API Keys](https://cursor.com/settings)
+- **Claude Sonnet 4.5**: [Anthropic Claude](https://www.anthropic.com/claude)
+- **GitLab MR API**: [GitLab Merge Requests API](https://docs.gitlab.com/ee/api/merge_requests.html)
 
 ---
 
 **Made with ❤️ for better code quality**
 
-*Automate your code reviews with AI-powered intelligence*
+*Automate your code reviews with AI-powered intelligence using Cursor Agent CLI and Claude Sonnet 4.5*
 
