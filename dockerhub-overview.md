@@ -2,7 +2,7 @@
 
 **AI-Powered Automated Code Review System for GitLab Merge Requests**
 
-GitLab AI MR Reviewer is an intelligent code review automation tool that leverages **Claude Sonnet 4.5** through **Cursor Agent CLI** to provide comprehensive, context-aware code reviews for your GitLab merge requests.
+GitLab AI MR Reviewer is an intelligent **automated code review** tool for **GitLab merge requests** that uses **AI-powered code analysis** with **Claude Sonnet 4.5** through **Cursor Agent CLI**. This **Docker-based code review automation** integrates seamlessly with **GitLab CI/CD pipelines** to provide comprehensive, context-aware code reviews for your merge requests. Perfect for teams looking to automate code quality checks, improve code review efficiency, and maintain consistent code standards across **TypeScript**, **Java**, **Kotlin**, and other supported technologies.
 
 ---
 
@@ -130,6 +130,77 @@ GitLab AI MR Reviewer **automatically detects** your project's tech stack:
 - **Kotlin** (`kotlin`) - Auto-detected when `build.gradle.kts` exists
 
 No manual configuration needed!
+
+---
+
+## 🤝 Contributing & Adding New Tech Stacks
+
+Want to add support for your favorite programming language or framework? We welcome contributions!
+
+### How to Contribute
+
+1. **Fork the Repository**
+   - Visit [GitHub Repository](https://github.com/ixigo/gitlab-ai-mr-reviewer)
+   - Click "Fork" to create your own copy
+
+2. **Add Your Tech Stack**
+   - Create a new configuration directory: `config/<your-tech-stack>/`
+   - Add `cli.json` with review settings
+   - Create `rules/` directory with tech-specific review rules
+   - Update `src/services/tech-stack-detector.ts` to detect your stack
+   - Test with sample code
+
+3. **Submit a Pull Request**
+   - Follow our [Contributing Guidelines](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md)
+   - Use conventional commit format (e.g., `feat: add Python support`)
+   - Include examples and documentation
+
+### Quick Guide: Adding a Tech Stack
+
+**Example**: Adding Python support
+
+1. **Create config directory**:
+   ```bash
+   mkdir -p config/python
+   ```
+
+2. **Add `cli.json`**:
+   ```json
+   {
+     "version": "1.0",
+     "settings": {
+       "review": {
+         "focus_areas": ["code_quality", "best_practices", "error_handling"],
+         "severity_levels": ["critical", "moderate", "minor"],
+         "thresholds": {
+           "critical": 5,
+           "moderate": 10,
+           "minor": 15
+         }
+       },
+       "ai": {
+         "model": "claude-sonnet-4.5",
+         "temperature": 0.2
+       }
+     }
+   }
+   ```
+
+3. **Add review rules**:
+   ```bash
+   mkdir -p config/python/rules
+   # Create python-rules.mdc, review-rules.mdc, etc.
+   ```
+
+4. **Update tech stack detector**:
+   - Edit `src/services/tech-stack-detector.ts`
+   - Add detection logic (e.g., check for `requirements.txt` or `setup.py`)
+
+5. **Test and submit PR**:
+   - Test with a sample Python project
+   - Submit pull request with description
+
+**Full Documentation**: See [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) and [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md#creating-custom-configurations) for detailed instructions.
 
 ---
 
@@ -348,10 +419,25 @@ For detailed documentation, see:
 
 ## 🤝 Contributing
 
-Contributions welcome! See the [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) for:
-- Development setup
-- Commit guidelines (Conventional Commits)
-- Pull request process
+Contributions are welcome! We especially encourage contributions for:
+
+- **New Tech Stack Support**: Add support for Python, Go, Rust, PHP, Ruby, and more
+- **Enhanced Review Rules**: Improve existing tech stack review guidelines
+- **Bug Fixes**: Help us fix issues and improve reliability
+- **Documentation**: Improve guides and examples
+
+**Get Started**:
+- 📖 [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) - Development setup, commit guidelines, PR process
+- 🔧 [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md#creating-custom-configurations) - How to add new tech stacks
+- 🐛 [Report Issues](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues) - Found a bug? Let us know!
+- 💡 [Feature Requests](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues) - Have an idea? Share it!
+
+**Quick Links**:
+- [GitHub Repository](https://github.com/ixigo/gitlab-ai-mr-reviewer)
+- [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md)
+- [Configuration Documentation](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/config/README.md)
+
+**See also**: [Contributing & Adding New Tech Stacks](#-contributing--adding-new-tech-stacks) section above for detailed instructions on adding tech stack support.
 
 ---
 
@@ -378,7 +464,70 @@ ISC License - See [LICENSE](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/
 
 ---
 
+## ❓ Frequently Asked Questions (FAQ)
+
+### What is GitLab AI MR Reviewer?
+
+GitLab AI MR Reviewer is an **automated code review tool** that uses AI (Claude Sonnet 4.5) to analyze code changes in GitLab merge requests. It automatically detects your tech stack, reviews code changes, and posts inline comments and summary reports directly to your MR.
+
+### How does automated code review work?
+
+The tool fetches your merge request diff from GitLab, uses Cursor Agent CLI with Claude Sonnet 4.5 to analyze the code changes, identifies issues, bugs, and improvements, then posts detailed feedback as inline comments on specific code lines and a general assessment summary.
+
+### What programming languages are supported?
+
+Currently supports:
+- **TypeScript/Next.js** - React, Next.js applications
+- **Java/Maven** - Java projects using Maven build system
+- **Java/Gradle** - Java projects using Gradle build system
+- **Kotlin** - Kotlin projects with Gradle
+
+Want to add more? See our [Contributing Guide](#-contributing--adding-new-tech-stacks)!
+
+### Do I need to configure anything?
+
+No! The tool **automatically detects** your project's tech stack. Just add the Docker image to your GitLab CI pipeline and set the `CURSOR_API_KEY` environment variable. Everything else is automatic.
+
+### Is my code secure?
+
+Yes! The tool only sends **merge request diffs** (changed code) to the AI, not your entire codebase. Cursor/Claude don't store code after analysis. All communication uses HTTPS, and you can mask sensitive variables in GitLab CI/CD settings.
+
+### How long does a code review take?
+
+Typically **2-3 minutes** for medium-sized merge requests:
+- Small MR (5-10 files): ~1-2 minutes
+- Medium MR (10-20 files): ~2-3 minutes
+- Large MR (20+ files): ~3-5 minutes
+
+### Can I use this with GitHub or Bitbucket?
+
+Currently, GitLab AI MR Reviewer is designed specifically for **GitLab**. For GitHub or Bitbucket support, please [submit a feature request](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues).
+
+### How do I get a Cursor API key?
+
+1. Sign up at [cursor.com](https://cursor.com)
+2. Go to [Settings → API Keys](https://cursor.com/settings)
+3. Create a new API key
+4. Add it to your GitLab CI/CD Variables
+
+See our [detailed guide](#-how-to-get-cursor-api-key) above for step-by-step instructions.
+
+### Does this work with GitLab self-hosted instances?
+
+Yes! GitLab AI MR Reviewer works with both **GitLab.com** and **self-hosted GitLab instances**. Just ensure your GitLab runner can access the Docker registry and has network connectivity to Cursor API.
+
+### Can I customize the review rules?
+
+Yes! You can customize review rules by modifying the configuration files in the `config/` directory. Each tech stack has its own rules directory where you can add or modify review guidelines. See our [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md) for details.
+
+### What if my tech stack isn't supported?
+
+If your tech stack isn't currently supported, the tool will gracefully skip the review with exit code 0 (won't fail your pipeline). You can [contribute support for your tech stack](#-contributing--adding-new-tech-stacks) or [request it as a feature](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues).
+
+---
+
 **Made with ❤️ for better code quality**
 
 *Automate your code reviews with AI-powered intelligence using Cursor Agent CLI and Claude Sonnet 4.5*
 
+**Keywords**: automated code review, GitLab code review, AI code review, code review automation, GitLab CI/CD, Docker code review, merge request review, automated code analysis, code quality automation, GitLab merge request automation, AI-powered code review tool, code review bot, automated code inspection
