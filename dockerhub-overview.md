@@ -1,8 +1,8 @@
-# Review-Robo 🤖
+# GitLab AI MR Reviewer 🤖
 
 **AI-Powered Automated Code Review System for GitLab Merge Requests**
 
-Review-Robo is an intelligent code review automation tool that leverages **Claude Sonnet 4.5** through **Cursor Agent CLI** to provide comprehensive, context-aware code reviews for your GitLab merge requests.
+GitLab AI MR Reviewer is an intelligent **automated code review** tool for **GitLab merge requests** that uses **AI-powered code analysis** with **Claude Sonnet 4.5** through **Cursor Agent CLI**. This **Docker-based code review automation** integrates seamlessly with **GitLab CI/CD pipelines** to provide comprehensive, context-aware code reviews for your merge requests. Perfect for teams looking to automate code quality checks, improve code review efficiency, and maintain consistent code standards across **TypeScript**, **Java**, **Kotlin**, and other supported technologies.
 
 ---
 
@@ -11,7 +11,7 @@ Review-Robo is an intelligent code review automation tool that leverages **Claud
 ### Pull the Image
 
 ```bash
-docker pull your-registry/review-robo:latest
+docker pull ixigotech/gitlab-ai-mr-reviewer:latest
 ```
 
 ### Basic Usage in GitLab CI
@@ -23,7 +23,7 @@ stages:
 
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   artifacts:
@@ -34,7 +34,7 @@ code_review:
     - merge_requests
 ```
 
-**That's it!** Review-Robo automatically:
+**That's it!** GitLab AI MR Reviewer automatically:
 - ✅ Detects your project's tech stack (TypeScript/Next.js, Java/Maven, Kotlin, etc.)
 - ✅ Fetches MR diff from GitLab
 - ✅ Performs AI-powered code review
@@ -55,16 +55,61 @@ code_review:
 
 ## 📋 Environment Variables
 
-### Required Variables
+### Required Variables for GitLab CI
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `CURSOR_API_KEY` | Cursor API key for AI access | `cur-xxxxxxxxxxxxx` |
-| `CI_PROJECT_ID` | GitLab project ID | `12345` |
-| `CI_MERGE_REQUEST_IID` | Merge request internal ID | `42` |
-| `GITLAB_TOKEN` | GitLab API token (or use `CI_JOB_TOKEN`) | `glpat-xxxxx` |
+These variables must be configured in your GitLab project's **CI/CD Variables** (Settings → CI/CD → Variables):
 
-**Note**: In GitLab CI, `CI_JOB_TOKEN` is automatically provided - no manual token needed!
+| Variable | Description | How to Set | Example |
+|----------|-------------|------------|---------|
+| `CURSOR_API_KEY` | Cursor API key for AI access | ⚠️ **Manual**: Add in CI/CD Variables | `cur-xxxxxxxxxxxxx` |
+| `CI_PROJECT_ID` | GitLab project ID | ✅ **Automatic**: Set by GitLab CI | `12345` |
+| `CI_MERGE_REQUEST_IID` | Merge request internal ID | ✅ **Automatic**: Set by GitLab CI | `42` |
+| `CI_SERVER_URL` | GitLab instance URL | ✅ **Automatic**: Set by GitLab CI | `https://gitlab.com` |
+| `GITLAB_TOKEN` | GitLab API token | ⚠️ **Optional**: Use `CI_JOB_TOKEN` instead (automatic) | `glpat-xxxxx` |
+
+**Important Notes**:
+- ✅ `CI_PROJECT_ID`, `CI_MERGE_REQUEST_IID`, and `CI_SERVER_URL` are **automatically provided** by GitLab CI - no setup needed!
+- ✅ `CI_JOB_TOKEN` is **automatically provided** by GitLab CI and has necessary permissions - no manual token needed!
+- ⚠️ `CURSOR_API_KEY` **must be manually added** in GitLab CI/CD Variables (see [How to Get Cursor API Key](#-how-to-get-cursor-api-key) below)
+- ⚠️ If you choose to use `GITLAB_TOKEN` instead of `CI_JOB_TOKEN`, it must be manually added with scopes: `api`, `read_repository`, `write_repository`
+
+### How to Get Cursor API Key
+
+GitLab AI MR Reviewer uses **Cursor Agent CLI** which connects to **Claude Sonnet 4.5** for AI-powered code reviews.
+
+**Steps to get your Cursor API Key**:
+
+1. **Sign up/Login to Cursor**:
+   - Go to [https://cursor.com](https://cursor.com)
+   - Create an account or sign in
+
+2. **Navigate to API Settings**:
+   - Go to [https://cursor.com/settings](https://cursor.com/settings)
+   - Click on **"API Keys"** section
+
+3. **Create New API Key**:
+   - Click **"Create API Key"** or **"Generate New Key"**
+   - Copy the API key (it starts with `cur-`)
+   - ⚠️ **Important**: Save it immediately - you won't be able to see it again!
+
+4. **Add to GitLab CI/CD Variables**:
+   - In your GitLab project, go to **Settings → CI/CD → Variables**
+   - Click **"Add variable"**
+   - **Key**: `CURSOR_API_KEY`
+   - **Value**: Paste your API key (e.g., `cur-xxxxxxxxxxxxx`)
+   - ✅ **Check "Mask variable"** to hide it in logs
+   - ✅ **Check "Protect variable"** if you want it only in protected branches
+   - Click **"Add variable"**
+
+**API Key Format**:
+- Starts with `cur-` prefix
+- Example: `cur-abc123def456ghi789`
+
+**Security Best Practices**:
+- ✅ Always **mask** the variable in GitLab CI/CD settings
+- ✅ Use **protected variables** for production branches
+- ✅ Rotate API keys regularly
+- ✅ Never commit API keys to repository
 
 ### Optional Variables
 
@@ -77,7 +122,7 @@ code_review:
 
 ## 🎯 Supported Technologies
 
-Review-Robo **automatically detects** your project's tech stack:
+GitLab AI MR Reviewer **automatically detects** your project's tech stack:
 
 - **TypeScript/Next.js** (`next-ts`) - Auto-detected when `package.json` has `next` and `react`
 - **Java/Maven** (`java-maven`) - Auto-detected when `pom.xml` exists
@@ -88,6 +133,77 @@ No manual configuration needed!
 
 ---
 
+## 🤝 Contributing & Adding New Tech Stacks
+
+Want to add support for your favorite programming language or framework? We welcome contributions!
+
+### How to Contribute
+
+1. **Fork the Repository**
+   - Visit [GitHub Repository](https://github.com/ixigo/gitlab-ai-mr-reviewer)
+   - Click "Fork" to create your own copy
+
+2. **Add Your Tech Stack**
+   - Create a new configuration directory: `config/<your-tech-stack>/`
+   - Add `cli.json` with review settings
+   - Create `rules/` directory with tech-specific review rules
+   - Update `src/services/tech-stack-detector.ts` to detect your stack
+   - Test with sample code
+
+3. **Submit a Pull Request**
+   - Follow our [Contributing Guidelines](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md)
+   - Use conventional commit format (e.g., `feat: add Python support`)
+   - Include examples and documentation
+
+### Quick Guide: Adding a Tech Stack
+
+**Example**: Adding Python support
+
+1. **Create config directory**:
+   ```bash
+   mkdir -p config/python
+   ```
+
+2. **Add `cli.json`**:
+   ```json
+   {
+     "version": "1.0",
+     "settings": {
+       "review": {
+         "focus_areas": ["code_quality", "best_practices", "error_handling"],
+         "severity_levels": ["critical", "moderate", "minor"],
+         "thresholds": {
+           "critical": 5,
+           "moderate": 10,
+           "minor": 15
+         }
+       },
+       "ai": {
+         "model": "claude-sonnet-4.5",
+         "temperature": 0.2
+       }
+     }
+   }
+   ```
+
+3. **Add review rules**:
+   ```bash
+   mkdir -p config/python/rules
+   # Create python-rules.mdc, review-rules.mdc, etc.
+   ```
+
+4. **Update tech stack detector**:
+   - Edit `src/services/tech-stack-detector.ts`
+   - Add detection logic (e.g., check for `requirements.txt` or `setup.py`)
+
+5. **Test and submit PR**:
+   - Test with a sample Python project
+   - Submit pull request with description
+
+**Full Documentation**: See [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) and [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md#creating-custom-configurations) for detailed instructions.
+
+---
+
 ## 📖 Usage Examples
 
 ### Example 1: Basic GitLab CI Integration
@@ -95,7 +211,7 @@ No manual configuration needed!
 ```yaml
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -107,7 +223,7 @@ code_review:
 ```yaml
 code_review:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   artifacts:
@@ -126,7 +242,7 @@ code_review:
 # Review frontend
 review_frontend:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -136,7 +252,7 @@ review_frontend:
 # Review backend
 review_backend:
   stage: review
-  image: your-registry/review-robo:latest
+  image: ixigotech/gitlab-ai-mr-reviewer:latest
   script:
     - node /app/dist/index.js
   only:
@@ -154,7 +270,7 @@ docker run --rm \
   -e CI_MERGE_REQUEST_IID=42 \
   -v $(pwd):/workspace \
   -w /workspace \
-  your-registry/review-robo:latest \
+  ixigotech/gitlab-ai-mr-reviewer:latest \
   node /app/dist/index.js
 ```
 
@@ -168,8 +284,8 @@ docker run --rm \
 
 ### Included Components
 - ✅ Node.js runtime (v20.11.1)
-- ✅ Cursor CLI (pre-installed)
-- ✅ Review-Robo application (compiled TypeScript)
+- ✅ Cursor Agent CLI (pre-installed)
+- ✅ GitLab AI MR Reviewer application (compiled TypeScript)
 - ✅ Multi-tech-stack configurations
 
 ### Image Size
@@ -183,13 +299,21 @@ docker run --rm \
 
 ---
 
-## 📊 What Review-Robo Does
+## 📊 What GitLab AI MR Reviewer Does
 
 1. **Fetches MR Diff** - Retrieves all changes from GitLab API
 2. **Detects Tech Stack** - Automatically identifies project technology
-3. **AI Analysis** - Uses Claude Sonnet 4.5 to analyze code changes
+3. **AI Analysis** - Uses **Cursor Agent CLI** with **Claude Sonnet 4.5** to analyze code changes
 4. **Posts Comments** - Creates inline comments on specific lines
 5. **Summary Report** - Posts overall assessment with metrics and grading
+
+### AI Agent Details
+
+- **Agent**: Cursor Agent CLI
+- **AI Model**: Claude Sonnet 4.5 (via Cursor)
+- **Provider**: Cursor (powered by Anthropic)
+- **API Key Required**: Yes (`CURSOR_API_KEY`)
+- **How to Get API Key**: See [How to Get Cursor API Key](#-how-to-get-cursor-api-key) section above
 
 ### Review Output
 
@@ -212,9 +336,10 @@ docker run --rm \
 
 **Best Practices**:
 - ✅ Use `CI_JOB_TOKEN` in GitLab CI (automatic, no manual token needed)
-- ✅ Mask `CURSOR_API_KEY` in CI/CD variables
-- ✅ Use read-only tokens when possible
+- ✅ Mask `CURSOR_API_KEY` in CI/CD variables (Settings → CI/CD → Variables → Mask variable)
+- ✅ Protect variables for production branches (Settings → CI/CD → Variables → Protect variable)
 - ✅ Rotate API keys regularly
+- ✅ Never commit API keys to repository
 
 ---
 
@@ -235,14 +360,25 @@ docker run --rm \
 ## 🐛 Troubleshooting
 
 ### Issue: "cursor-agent not found"
-The image includes Cursor CLI pre-installed. If you see this error, ensure you're using the correct image.
+The image includes Cursor Agent CLI pre-installed. If you see this error, ensure you're using the correct image.
 
 ### Issue: "Missing required environment variable"
-Ensure all required variables are set:
-- `CURSOR_API_KEY`
-- `CI_PROJECT_ID`
-- `CI_MERGE_REQUEST_IID`
-- `GITLAB_TOKEN` or `CI_JOB_TOKEN`
+Ensure all required variables are set in GitLab CI/CD Variables:
+
+**Automatically provided by GitLab CI** (no setup needed):
+- `CI_PROJECT_ID` - Automatically set
+- `CI_MERGE_REQUEST_IID` - Automatically set
+- `CI_SERVER_URL` - Automatically set
+- `CI_JOB_TOKEN` - Automatically set (can be used instead of `GITLAB_TOKEN`)
+
+**Must be manually added in CI/CD Variables**:
+- `CURSOR_API_KEY` - ⚠️ **Required**: Add in Settings → CI/CD → Variables
+  - Get your key from: https://cursor.com/settings → API Keys
+  - Format: `cur-xxxxxxxxxxxxx`
+  - ✅ Mask the variable to hide it in logs
+
+**Optional** (if not using `CI_JOB_TOKEN`):
+- `GITLAB_TOKEN` - Only needed if you want to use a personal/project token instead of `CI_JOB_TOKEN`
 
 ### Issue: "Failed to fetch MR data"
 - Verify `GITLAB_TOKEN` has `api` scope
@@ -250,9 +386,12 @@ Ensure all required variables are set:
 - Ensure GitLab server URL is accessible
 
 ### Issue: "Cursor API error"
-- Verify `CURSOR_API_KEY` is valid
-- Check API rate limits
-- Ensure network connectivity to Cursor API
+- Verify `CURSOR_API_KEY` is valid and correctly set in CI/CD Variables
+- Check that the API key format is correct (starts with `cur-`)
+- Verify the key hasn't expired or been revoked
+- Check API rate limits on your Cursor plan
+- Ensure network connectivity to Cursor API from your GitLab runner
+- **How to verify**: Go to https://cursor.com/settings → API Keys to check your key status
 
 ---
 
@@ -280,10 +419,25 @@ For detailed documentation, see:
 
 ## 🤝 Contributing
 
-Contributions welcome! See the [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) for:
-- Development setup
-- Commit guidelines (Conventional Commits)
-- Pull request process
+Contributions are welcome! We especially encourage contributions for:
+
+- **New Tech Stack Support**: Add support for Python, Go, Rust, PHP, Ruby, and more
+- **Enhanced Review Rules**: Improve existing tech stack review guidelines
+- **Bug Fixes**: Help us fix issues and improve reliability
+- **Documentation**: Improve guides and examples
+
+**Get Started**:
+- 📖 [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md) - Development setup, commit guidelines, PR process
+- 🔧 [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md#creating-custom-configurations) - How to add new tech stacks
+- 🐛 [Report Issues](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues) - Found a bug? Let us know!
+- 💡 [Feature Requests](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues) - Have an idea? Share it!
+
+**Quick Links**:
+- [GitHub Repository](https://github.com/ixigo/gitlab-ai-mr-reviewer)
+- [Contributing Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/CONTRIBUTING.md)
+- [Configuration Documentation](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/config/README.md)
+
+**See also**: [Contributing & Adding New Tech Stacks](#-contributing--adding-new-tech-stacks) section above for detailed instructions on adding tech stack support.
 
 ---
 
@@ -303,13 +457,77 @@ ISC License - See [LICENSE](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/
 
 ## 🎓 Learn More
 
-- [Cursor Documentation](https://cursor.com/docs)
-- [Claude Sonnet 4.5](https://www.anthropic.com/claude)
-- [GitLab MR API](https://docs.gitlab.com/ee/api/merge_requests.html)
+- **Cursor Agent CLI**: [Cursor Documentation](https://cursor.com/docs)
+- **Get Cursor API Key**: [Cursor Settings → API Keys](https://cursor.com/settings)
+- **Claude Sonnet 4.5**: [Anthropic Claude](https://www.anthropic.com/claude)
+- **GitLab MR API**: [GitLab Merge Requests API](https://docs.gitlab.com/ee/api/merge_requests.html)
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### What is GitLab AI MR Reviewer?
+
+GitLab AI MR Reviewer is an **automated code review tool** that uses AI (Claude Sonnet 4.5) to analyze code changes in GitLab merge requests. It automatically detects your tech stack, reviews code changes, and posts inline comments and summary reports directly to your MR.
+
+### How does automated code review work?
+
+The tool fetches your merge request diff from GitLab, uses Cursor Agent CLI with Claude Sonnet 4.5 to analyze the code changes, identifies issues, bugs, and improvements, then posts detailed feedback as inline comments on specific code lines and a general assessment summary.
+
+### What programming languages are supported?
+
+Currently supports:
+- **TypeScript/Next.js** - React, Next.js applications
+- **Java/Maven** - Java projects using Maven build system
+- **Java/Gradle** - Java projects using Gradle build system
+- **Kotlin** - Kotlin projects with Gradle
+
+Want to add more? See our [Contributing Guide](#-contributing--adding-new-tech-stacks)!
+
+### Do I need to configure anything?
+
+No! The tool **automatically detects** your project's tech stack. Just add the Docker image to your GitLab CI pipeline and set the `CURSOR_API_KEY` environment variable. Everything else is automatic.
+
+### Is my code secure?
+
+Yes! The tool only sends **merge request diffs** (changed code) to the AI, not your entire codebase. Cursor/Claude don't store code after analysis. All communication uses HTTPS, and you can mask sensitive variables in GitLab CI/CD settings.
+
+### How long does a code review take?
+
+Typically **2-3 minutes** for medium-sized merge requests:
+- Small MR (5-10 files): ~1-2 minutes
+- Medium MR (10-20 files): ~2-3 minutes
+- Large MR (20+ files): ~3-5 minutes
+
+### Can I use this with GitHub or Bitbucket?
+
+Currently, GitLab AI MR Reviewer is designed specifically for **GitLab**. For GitHub or Bitbucket support, please [submit a feature request](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues).
+
+### How do I get a Cursor API key?
+
+1. Sign up at [cursor.com](https://cursor.com)
+2. Go to [Settings → API Keys](https://cursor.com/settings)
+3. Create a new API key
+4. Add it to your GitLab CI/CD Variables
+
+See our [detailed guide](#-how-to-get-cursor-api-key) above for step-by-step instructions.
+
+### Does this work with GitLab self-hosted instances?
+
+Yes! GitLab AI MR Reviewer works with both **GitLab.com** and **self-hosted GitLab instances**. Just ensure your GitLab runner can access the Docker registry and has network connectivity to Cursor API.
+
+### Can I customize the review rules?
+
+Yes! You can customize review rules by modifying the configuration files in the `config/` directory. Each tech stack has its own rules directory where you can add or modify review guidelines. See our [Configuration Guide](https://github.com/ixigo/gitlab-ai-mr-reviewer/blob/main/docs/04-setup-configuration.md) for details.
+
+### What if my tech stack isn't supported?
+
+If your tech stack isn't currently supported, the tool will gracefully skip the review with exit code 0 (won't fail your pipeline). You can [contribute support for your tech stack](#-contributing--adding-new-tech-stacks) or [request it as a feature](https://github.com/ixigo/gitlab-ai-mr-reviewer/issues).
 
 ---
 
 **Made with ❤️ for better code quality**
 
-*Automate your code reviews with AI-powered intelligence*
+*Automate your code reviews with AI-powered intelligence using Cursor Agent CLI and Claude Sonnet 4.5*
 
+**Keywords**: automated code review, GitLab code review, AI code review, code review automation, GitLab CI/CD, Docker code review, merge request review, automated code analysis, code quality automation, GitLab merge request automation, AI-powered code review tool, code review bot, automated code inspection
